@@ -2,6 +2,7 @@
 
 module Database.CharacterDB
     ( insertCharacters
+    , selectNextCharacter
     ) where
 
 import Database.Beam
@@ -15,8 +16,10 @@ import Data.Functor.Compose (Compose(..))
 
 data CharacterDB f =
     CharacterDB
-        { _tableCharacters :: f (TableEntity CharacterT)
-        , _tableElements :: f (TableEntity ElementT)
+        { _tableCharacters     :: f (TableEntity CharacterT)
+        , _tableElements       :: f (TableEntity ElementT)
+        , _tableUsers          :: f (TableEntity UserT)
+        , _tableUserCharacters :: f(TableEntity UserCharacterT)
         } deriving (Generic, Database be)
 
 characterDB :: DatabaseSettings be CharacterDB
@@ -46,9 +49,9 @@ deriving instance Eq (PrimaryKey CharacterT Identity)
 data ElementT f =
     Element
         { _elementId            :: Columnar f Int
-        , _elementCharacter   :: PrimaryKey CharacterT f
+        , _elementCharacter     :: PrimaryKey CharacterT f
         , _elementOrderPosition :: Columnar f Int
-        , _elementElement     :: PrimaryKey CharacterT f
+        , _elementElement       :: PrimaryKey CharacterT f
         } deriving (Generic, Beamable)
 
 type Element = ElementT Identity
@@ -61,6 +64,54 @@ instance Table ElementT where
     data PrimaryKey ElementT f = ElementId (Columnar f Int) deriving (Generic, Beamable)
     primaryKey = ElementId . _elementId
 
+deriving instance Show (PrimaryKey ElementT Identity)
+deriving instance Eq (PrimaryKey ElementT Identity)
+
+data UserT f =
+    User
+        { _userId           :: Columnar f Int
+        , _usesUsername     :: Columnar f Text
+        , _userEmail        :: Columnar f Text
+        , _userPasswordHash :: Columnar f Text
+        , _userSalt         :: Columnar f Text
+        } deriving (Generic, Beamable)
+
+type User = UserT Identity
+type UserId = PrimaryKey UserT Identity
+
+deriving instance Show User
+deriving instance Eq User
+
+instance Table UserT where
+    data PrimaryKey UserT f = UserId (Columnar f Int) deriving (Generic, Beamable)
+    primaryKey = UserId . _userId
+
+deriving instance Show (PrimaryKey UserT Identity)
+deriving instance Eq (PrimaryKey UserT Identity)
+
+data UserCharacterT f =
+    UserCharacter
+        { _ucId        :: Columnar f Int
+        , _ucUser      :: PrimaryKey UserT f
+        , _ucCharacter :: PrimaryKey CharacterT f
+        , _ucStory     :: Columnar f Text
+        } deriving (Generic, Beamable)
+
+type UserCharacter = UserCharacterT Identity
+type UserCharacterId = PrimaryKey UserCharacterT Identity
+
+deriving instance Show UserCharacter
+deriving instance Eq UserCharacter
+
+instance Table UserCharacterT where
+    data PrimaryKey UserCharacterT f = UserCharacterId (Columnar f Int) deriving (Generic, Beamable)
+    primaryKey = UserCharacterId . _ucId
+
+deriving instance Show (PrimaryKey UserCharacterT Identity)
+deriving instance Eq (PrimaryKey UserCharacterT Identity)
+
+-- | Inserts all the characters plus their elements that have been imported 
+-- from the Character Importer into the database.
 insertCharacters :: Connection -> [CharacterImport] -> IO ()
 insertCharacters conn = mapM_ (\ci -> insertCharacterT conn ci >>= insertElementT conn ci)
 
@@ -110,3 +161,18 @@ selectCharacter :: Connection -> Int -> IO Character
 selectCharacter conn characterId = runSelectOne conn $ select $ 
     filter_ (\c -> _charId c ==. val_ characterId) $
     all_ (_tableCharacters characterDB)
+
+-- | Selects the next character that the user has to learn
+selectNextCharacter :: Connection -> Int -> IO Character
+selectNextCharacter conn userId =
+   selectLatestCharacter conn userId >>= selectCharacter conn . (+) 1
+
+selectLatestCharacter :: Connection -> Int -> IO Int
+selectLatestCharacter conn userId =
+    let getCharacterId (CharacterId id) = id
+        maxCharacterUserQ =
+            aggregate_ (\uc -> fromMaybe_ 1 (max_ (getCharacterId $ _ucCharacter uc))) $
+                filter_ (\uc -> _ucUser uc ==. val_ (UserId userId)) $
+                all_ (_tableUserCharacters characterDB)
+    in runSelectOne conn (select maxCharacterUserQ)
+    
