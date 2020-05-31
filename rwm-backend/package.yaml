@@ -1,0 +1,81 @@
+name:                real-world-mandarin
+version:             0.1.0.0
+github:              "Pureblocks/real-world-mandarin"
+license:             BSD3
+author:              "Thomas Meijers"
+maintainer:          "example@example.com"
+copyright:           "2020 Pureblocks"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/real-world-mandarin#readme>
+
+dependencies:
+  - base >= 4.7 && < 5
+  - text >= 1.2
+  - beam-core >= 0.8
+  - beam-postgres >= 0.4
+  - split
+  - time
+  - servant
+  - servant-server
+  - wai
+  - warp
+  - aeson
+  - mtl
+  - random
+  - bytestring
+  - cryptonite
+  - wreq
+  - http-client
+  - lens
+  - lens-aeson
+  - uri-encode
+  - memory
+
+default-extensions: 
+  - OverloadedStrings
+  - DeriveGeneric 
+  - GADTs 
+  - FlexibleContexts
+  - FlexibleInstances
+  - TypeFamilies
+  - TypeApplications
+  - DeriveAnyClass
+  - StandaloneDeriving 
+  - TypeSynonymInstances 
+  - MultiParamTypeClasses
+
+library:
+  source-dirs: src
+
+executables:
+  real-world-mandarin-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - real-world-mandarin
+
+tests:
+  real-world-mandarin-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - real-world-mandarin

@@ -1,0 +1,15 @@
+{
+    "twitterConfig": {
+        "apiKey": "example-key",
+        "apiSecretKey": "example-secret-key",
+        "accessToken": "example-access-token",
+        "accessTokenSecret": "example-access-token-secret"
+    },
+    "postgresConfig": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "mysecretpassword",
+        "database": "realworldmandarin"
+    }
+}
