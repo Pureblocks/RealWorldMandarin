@@ -1,8 +1,14 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Database.CharacterDB
-    ( insertCharacters
+    ( User(..)
+    , insertCharacters
     , selectNextCharacter
+    , selectLearnedCharacters
+    , selectNotlearnedCharacters
+    , selectUserForLogin
+    , jwtFromUser
+    , registerNewUser
     ) where
 
 import Database.Beam
@@ -70,7 +76,7 @@ deriving instance Eq (PrimaryKey ElementT Identity)
 data UserT f =
     User
         { _userId           :: Columnar f Int
-        , _usesUsername     :: Columnar f Text
+        , _userUsername     :: Columnar f Text
         , _userEmail        :: Columnar f Text
         , _userPasswordHash :: Columnar f Text
         , _userSalt         :: Columnar f Text
@@ -175,4 +181,29 @@ selectLatestCharacter conn userId =
                 filter_ (\uc -> _ucUser uc ==. val_ (UserId userId)) $
                 all_ (_tableUserCharacters characterDB)
     in runSelectOne conn (select maxCharacterUserQ)
-    
+
+-- | Selects all the characters that a user has learned (created a story for)
+selectLearnedCharacters :: Connection -> Int -> IO [(Character, UserCharacter)]
+selectLearnedCharacters conn userId = undefined
+
+-- | Selects all the characters that a user has not learned
+selectNotlearnedCharacters :: Connection -> Int -> IO [Character]
+selectNotlearnedCharacters conn userId = undefined
+
+-- | Marks a character learned with a story
+insertLearnedCharacter :: Connection -> Int -> Int -> Text -> IO ()
+insertLearnedCharacter conn userId characterId story = undefined
+
+-- | Selects the user for logging in (apply encryption etc with salt)
+selectUserForLogin :: Connection -> Text -> Text -> IO (Maybe User)
+selectUserForLogin conn username password = undefined
+
+-- | Simple helper function to extract values required for UserJWT
+jwtFromUser :: User -> (Text, Text, Text)
+jwtFromUser user = (_userUsername user, _userPasswordHash user, _userEmail user)
+
+-- | Inserts a new user into the database
+-- can throw error based on unique constraints
+-- TODO: how to handle these unique constraints errors?
+registerNewUser :: Connection -> Text -> Text -> Text -> IO User
+registerNewUser conn username email password = undefined

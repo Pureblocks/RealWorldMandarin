@@ -11,11 +11,13 @@ import GHC.Generics (Generic)
 import Data.Maybe (fromJust)
 import Data.Text.Encoding (encodeUtf8Builder)
 import Data.ByteString.Builder(toLazyByteString)
+import Crypto.JOSE.JWK (JWK)
 
 data Config 
     = Config
         { twitterConfig  :: !TwitterConfig
         , postgresConfig :: !PostgresConfig
+        , jwtKey         :: !JWK
         } deriving (Show, Generic)
 
 instance FromJSON Config

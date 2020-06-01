@@ -22,7 +22,7 @@ main = do
     threadId <- forkIO (scheduleTweets config conn)
     _        <- putStrLn ("Scheduler started on threadId: " ++ show threadId)
     _        <- putStrLn "Starting API"
-    run 8080 (app conn)
+    run 8080 (app conn config)
 
 connectToPostgres :: PostgresConfig -> IO Connection
 connectToPostgres config =

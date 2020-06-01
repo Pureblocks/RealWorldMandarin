@@ -11,5 +11,9 @@
         "user": "postgres",
         "password": "mysecretpassword",
         "database": "realworldmandarin"
+    },
+    "jwtKey": {
+        "k": "oct-key",
+        "kty":"oct"
     }
 }

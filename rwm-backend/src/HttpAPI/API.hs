@@ -5,22 +5,27 @@ module HttpAPI.API
     ) where
 
 import Servant
-import Control.Monad.Except
-import Control.Monad.Reader
-import Database.WordADayDB (selectAllTweets, selectAllWords)
+import Servant.Auth.Server
 import Database.Beam.Postgres (Connection)
-import Words.MandarinHSKWord (MandarinHSKWord)
-import Twitter.TwitterClient (HskTweetCreated)
+import HttpAPI.WordADayAPI
+import HttpAPI.LoginAPI
+import Configuration.Config
 
-type API = "api" :> "tweets" :> Get '[JSON] [HskTweetCreated]
-      :<|> "api" :> "hsk-words"  :> Get '[JSON] [MandarinHSKWord] 
+type API = "api" :> WordADayAPI
+     :<|> "api" :> LoginAPI
 
-server :: Connection -> Server API
-server conn = liftIO (selectAllTweets conn) 
-         :<|> liftIO (selectAllWords conn)
+server :: Connection 
+       -> CookieSettings
+       -> JWTSettings 
+       -> Server API
+server conn cs jwtCfg = wordADayServer conn 
+                   :<|> loginServer conn cs jwtCfg 
 
 api :: Proxy API
 api = Proxy
 
-app :: Connection -> Application
-app = serve api . server
+app :: Connection -> Config -> Application
+app conn conf = 
+    let jwtCfg = defaultJWTSettings (jwtKey conf)
+        cfg    = defaultCookieSettings :. jwtCfg :. EmptyContext
+    in serveWithContext api cfg (server conn defaultCookieSettings jwtCfg)

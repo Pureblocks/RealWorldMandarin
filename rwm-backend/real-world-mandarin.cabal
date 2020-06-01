@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f3af95f50c45bc6f5a8a08557e84a305abe5f6e1d00be4746d3ab35d2f7508a4
+-- hash: 916d8b43fd06fcd37e2e8558044fa0c40406c71243f574ae001f1e9049136aaf
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -32,6 +32,10 @@ library
       Database.CharacterDB
       Database.WordADayDB
       HttpAPI.API
+      HttpAPI.CharacterAPI
+      HttpAPI.LoginAPI
+      HttpAPI.UserAPI
+      HttpAPI.WordADayAPI
       Importer.CharacterImporter
       Importer.WordImporter
       Scheduling.Scheduler
@@ -50,13 +54,17 @@ library
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , http-api-data >=0.3.9
     , http-client
+    , jose
     , lens
     , lens-aeson
     , memory
     , mtl
     , random
     , servant
+    , servant-auth >=0.3
+    , servant-auth-server >=0.4.5
     , servant-server
     , split
     , text >=1.2
@@ -82,7 +90,9 @@ executable real-world-mandarin-exe
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , http-api-data >=0.3.9
     , http-client
+    , jose
     , lens
     , lens-aeson
     , memory
@@ -90,6 +100,8 @@ executable real-world-mandarin-exe
     , random
     , real-world-mandarin
     , servant
+    , servant-auth >=0.3
+    , servant-auth-server >=0.4.5
     , servant-server
     , split
     , text >=1.2
@@ -116,7 +128,9 @@ test-suite real-world-mandarin-test
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , http-api-data >=0.3.9
     , http-client
+    , jose
     , lens
     , lens-aeson
     , memory
@@ -124,6 +138,8 @@ test-suite real-world-mandarin-test
     , random
     , real-world-mandarin
     , servant
+    , servant-auth >=0.3
+    , servant-auth-server >=0.4.5
     , servant-server
     , split
     , text >=1.2

@@ -1,0 +1,2 @@
+module HttpAPI.CharacterAPI
+    () where
