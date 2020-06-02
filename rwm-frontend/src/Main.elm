@@ -10,25 +10,45 @@ import Url exposing (Url)
 import Url.Parser as UrlParser exposing ((</>), Parser, s, top)
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Grid.Col as Col
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as Listgroup
 import Bootstrap.Modal as Modal
+import Color exposing (Color)
+import Debug exposing (log)
+
+-- Colours: https://coolors.co/e54b4b-ffa987-f7ebe8-444140-1e1e24
+
+lightRed : Color
+lightRed = Color.hsl 0 0.75 0.60
 
 type alias Flags =
     {}
+
+type alias User =
+    { username : String
+    , email : String
+    , jwt : String
+    }
 
 type alias Model =
     { navKey : Navigation.Key
     , page : Page
     , navState : Navbar.State
     , modalVisibility : Modal.Visibility
+    , user : Maybe User
     }
 
+-- | TODO add login
 type Page
     = Home
+    | Dashboard
     | HonourHanzi
     | NotFound
 
@@ -51,7 +71,12 @@ init flags url key =
             Navbar.initialState NavMsg
 
         ( model, urlCmd ) =
-            urlUpdate url { navKey = key, navState = navState, page = Home, modalVisibility= Modal.hidden }
+            urlUpdate url { navKey = key
+                          , navState = navState
+                          , page = Home
+                          , modalVisibility= Modal.hidden
+                          , user = Nothing 
+                          }
     in
         ( model, Cmd.batch [ urlCmd, navCmd ] )
 
@@ -104,12 +129,17 @@ update msg model =
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
 urlUpdate url model =
-    case decode url of
+    case model.user of
         Nothing ->
-            ( { model | page = NotFound }, Cmd.none )
+            ( { model | page = Home }, Cmd.none )
 
-        Just route ->
-            ( { model | page = route }, Cmd.none )
+        Just user ->
+            case decode url of
+                Nothing ->
+                    ( { model | page = NotFound }, Cmd.none )
+
+                Just route ->
+                    ( { model | page = route }, Cmd.none )
 
 
 decode : Url -> Maybe Page
@@ -121,26 +151,60 @@ routeParser =
     UrlParser.oneOf
         [ UrlParser.map Home top
         , UrlParser.map Home (s "index.html")
+        , UrlParser.map Dashboard (s "dashboard")
         , UrlParser.map HonourHanzi (s "honour-hanzi")
         ]
 
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Real World Mandarin"
-    , body =
-        [ div []
-            [ topMenu model
-            , mainContent model
-            , modal model
+    case model.page of
+        Home -> 
+            { title = "Welcome to Real World Mandarin"
+            , body = [ div [] pageHome ]
+            }
+
+        _ -> 
+            { title = "Real World Mandarin"
+            , body =
+                [ div []
+                    [ topMenu model
+                    , mainContent model
+                    , modal model
+                    ]
+                ]
+            }
+
+pageHome : List (Html Msg)
+pageHome = 
+    [ Grid.container []
+        [ Grid.row []
+            [ Grid.col [] []
+            , Grid.col []
+                [ Form.form 
+                    []
+                    [ Form.group []
+                        [ Form.label [for "username"] [ text "Username"]
+                        , Input.email [ Input.id "username" ]
+                        ]
+                    , Form.group []
+                        [ Form.label [for "mypwd"] [ text "Password"]
+                        , Input.password [ Input.id "mypwd" ]
+                        ]
+                    , Checkbox.checkbox [ Checkbox.id "remember" ] "remember me"
+                    , Button.submitButton [ Button.primary] [ text "Login" ]
+                    ]
+                ]
+            , Grid.col [] []
             ]
         ]
-    }
+    ]
 
 topMenu : Model -> Html Msg
 topMenu model =
     Navbar.config NavMsg
         |> Navbar.withAnimation
+        |> Navbar.darkCustom lightRed
         |> Navbar.brand [ href "/" ] [ text "Real World Mandarin" ]
         |> Navbar.customItems
             [ Navbar.customItem (
@@ -149,39 +213,42 @@ topMenu model =
                     [ HTML.a 
                         [ id "dropdownMenuLink" 
                         , class "dropdown-toggle"
-                        , class "btn"
+                        , style "color" "white"
                         , href "#" 
                         , attribute "data-toggle" "dropdown" 
                         , attribute "role" "button" 
                         , attribute "aria-haspopup" "true" 
                         , attribute "aria-expanded" "false"
                         ] 
-                        [ img 
+                        [ text "Hello, Thomas!" 
+                        , img 
                             [ src "https://s3.eu-central-1.amazonaws.com/bootstrapbaymisc/blog/24_days_bootstrap/fox.jpg"
                             , width 30
                             , height 30
                             , class "rounded-circle"
+                            , style "margin-left" "10px"
                             ] 
                             []
                         ]
                     , div 
                         [ class "dropdown-menu"
+                        , style "margin-top" "10px"
                         , attribute "aria-labelledby" "dropdownMenuLink"
                         ] 
                         [ HTML.a
                             [ class "dropdown-item"
-                            , href "#"
+                            , href "/"
                             ]
                             [ text "Dashboard" ]
                         , HTML.a
                             [ class "dropdown-item"
-                            , href "#"
+                            , href "/settings"
                             ]
                             [ text "Settings" ]
                         , div [ class "dropdown-divider" ] []
                         , HTML.a
                             [ class "dropdown-item"
-                            , href "#"
+                            , href "/logout"
                             ]
                             [ text "Logout" ]
                         ]
@@ -193,41 +260,31 @@ mainContent : Model -> Html Msg
 mainContent model =
     Grid.container [] <|
         case model.page of
-            Home ->
-                pageHome model
+            Dashboard ->
+                pageDashboard model
 
             HonourHanzi ->
-                pageGettingStarted model
+                pageHonourHanzi model
 
             NotFound ->
                 pageNotFound
 
+            Home ->
+                pageHome
 
-pageHome : Model -> List (Html Msg)
-pageHome model =
-    [ h1 [] [ text "Home" ]
-    , Grid.row []
+
+pageDashboard : Model -> List (Html Msg)
+pageDashboard model =
+    [ Grid.row [ Row.attrs [ style "margin-top" "20px" ] ]
         [ Grid.col []
-            [ Card.config [ Card.outlinePrimary ]
-                |> Card.headerH4 [] [ text "Getting started" ]
-                |> Card.block []
-                    [ Block.text [] [ text "Getting started is real easy. Just click the start button." ]
-                    , Block.custom <|
-                        Button.linkButton
-                            [ Button.primary, Button.attrs [ href "/getting-started" ] ]
-                            [ text "Start" ]
-                    ]
-                |> Card.view
-            ]
-        , Grid.col []
             [ Card.config [ Card.outlineDanger ]
-                |> Card.headerH4 [] [ text "Modules" ]
+                |> Card.headerH4 [] [ text "Honour Hanzi" ]
                 |> Card.block []
-                    [ Block.text [] [ text "Check out the modules overview" ]
+                    [ Block.text [] [ text "Check out the Honour Hanzi module!" ]
                     , Block.custom <|
                         Button.linkButton
-                            [ Button.primary, Button.attrs [ href "/modules" ] ]
-                            [ text "Module" ]
+                            [ Button.primary, Button.attrs [ href "/honour-hanzi" ] ]
+                            [ text "Start the Hanzi" ]
                     ]
                 |> Card.view
             ]
@@ -235,9 +292,9 @@ pageHome model =
     ]
 
 
-pageGettingStarted : Model -> List (Html Msg)
-pageGettingStarted model =
-    [ h2 [] [ text "Getting started" ]
+pageHonourHanzi : Model -> List (Html Msg)
+pageHonourHanzi model =
+    [ h2 [] [ text "Honour Hanzi" ]
     , Button.button
         [ Button.success
         , Button.large
@@ -245,17 +302,6 @@ pageGettingStarted model =
         , Button.attrs [ onClick ShowModal ]
         ]
         [ text "Click me" ]
-    ]
-
-
-pageModules : Model -> List (Html Msg)
-pageModules model =
-    [ h1 [] [ text "Modules" ]
-    , Listgroup.ul
-        [ Listgroup.li [] [ text "Alert" ]
-        , Listgroup.li [] [ text "Badge" ]
-        , Listgroup.li [] [ text "Card" ]
-        ]
     ]
 
 
