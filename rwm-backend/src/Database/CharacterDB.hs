@@ -9,6 +9,7 @@ module Database.CharacterDB
     , selectUserForLogin
     , jwtFromUser
     , registerNewUser
+    , ViolationError(..)
     ) where
 
 import Database.Beam
@@ -19,6 +20,15 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Importer.CharacterImporter (CharacterImport(..))
 import Data.Functor.Compose (Compose(..))
+import Crypto.KDF.PBKDF2 (generate, prfHMAC, Parameters(..))
+import Crypto.Hash.Algorithms (SHA256(..))
+import Crypto.Random (getSystemDRG, SystemDRG, randomBytesGenerate)
+import Data.ByteArray.Encoding (convertToBase, Base(Base64))
+import Data.ByteString (ByteString)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import Database.PostgreSQL.Simple.Errors (catchViolation, ConstraintViolation, ConstraintViolation(..))
+import Database.PostgreSQL.Simple.Internal (SqlError)
+import Control.Exception (try, throwIO, Exception)
 
 data CharacterDB f =
     CharacterDB
@@ -196,14 +206,51 @@ insertLearnedCharacter conn userId characterId story = undefined
 
 -- | Selects the user for logging in (apply encryption etc with salt)
 selectUserForLogin :: Connection -> Text -> Text -> IO (Maybe User)
-selectUserForLogin conn username password = undefined
+selectUserForLogin conn username password = do
+    user <- runBeamPostgres conn $ 
+                runSelectReturningOne $ select $
+                filter_ (\u -> _userUsername u ==. val_ username) $
+                all_ (_tableUsers characterDB)
+    return (user >>= checkPassword password)
+
+checkPassword :: Text -> User -> Maybe User
+checkPassword password user =
+    let passH = generate (prfHMAC SHA256) (Parameters 4000 32) (encodeUtf8 password) (encodeUtf8 $ _userSalt user) :: ByteString
+    in if decodeUtf8 (convertToBase Base64 passH) == _userPasswordHash user
+            then Just user
+            else Nothing 
 
 -- | Simple helper function to extract values required for UserJWT
-jwtFromUser :: User -> (Text, Text, Text)
-jwtFromUser user = (_userUsername user, _userPasswordHash user, _userEmail user)
+jwtFromUser :: User -> (Int, Text)
+jwtFromUser user = (_userId user, _userUsername user)
 
 -- | Inserts a new user into the database
--- can throw error based on unique constraints
--- TODO: how to handle these unique constraints errors?
 registerNewUser :: Connection -> Text -> Text -> Text -> IO User
-registerNewUser conn username email password = undefined
+registerNewUser conn username email pwd = do
+    gen         <- getSystemDRG
+    let (bs, _) = randomBytesGenerate 32 gen :: (ByteString, SystemDRG)
+        salt    = convertToBase Base64 bs :: ByteString
+        passH   = generate (prfHMAC SHA256) (Parameters 4000 32) (encodeUtf8 pwd) salt :: ByteString
+        passH'  = decodeUtf8 (convertToBase Base64 passH) :: Text
+    users      <- catchViolation catchUniqueViolation $
+                runBeamPostgres conn $ runInsertReturningList $
+                insert (_tableUsers characterDB)
+                    ( insertExpressions
+                        [ User 
+                            default_ 
+                            (val_ username) 
+                            (val_ email) 
+                            (val_ passH') 
+                            (val_ $ decodeUtf8 salt)
+                        ]
+                    )
+    return (head users)
+
+newtype ViolationError = ViolationError Text deriving Show
+
+instance Exception ViolationError
+
+catchUniqueViolation :: SqlError -> ConstraintViolation -> IO [User]
+catchUniqueViolation _ (UniqueViolation "users_username_key") = throwIO (ViolationError "Username is already in use.")
+catchUniqueViolation _ (UniqueViolation "users_email_key")    = throwIO (ViolationError "E-Mail is already in use.")
+catchUniqueViolation e _                                      = throwIO e

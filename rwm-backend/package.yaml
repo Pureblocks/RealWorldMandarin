@@ -24,12 +24,14 @@ dependencies:
   - text >= 1.2
   - beam-core >= 0.8
   - beam-postgres >= 0.4
+  - postgresql-simple
   - split
   - time
   - servant
   - servant-server
   - servant-auth >= 0.3
   - servant-auth-server >= 0.4.5
+  - servant-elm
   - http-api-data >= 0.3.9
   - wai
   - warp

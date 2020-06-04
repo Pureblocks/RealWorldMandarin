@@ -8,7 +8,7 @@ import Servant
 import Servant.Auth.Server
 import Database.Beam.Postgres (Connection)
 import HttpAPI.WordADayAPI
-import HttpAPI.LoginAPI
+import HttpAPI.AuthAPI
 import Configuration.Config
 
 type API = "api" :> WordADayAPI

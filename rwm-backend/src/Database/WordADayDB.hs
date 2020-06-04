@@ -158,7 +158,7 @@ toTweet ht = TweetT
   (val_ $ tweetLevel ht)
   (val_ $ tweetPlaceDate ht)
   (val_ $ tweetContent ht)
-
+ 
 selectAllTweets :: Connection -> IO [HskTweetCreated]
 selectAllTweets conn = do
    tweets <- runBeamPostgres conn $ runSelectReturningList $ select (all_ (_tableTweets wordADayDB))

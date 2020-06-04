@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 916d8b43fd06fcd37e2e8558044fa0c40406c71243f574ae001f1e9049136aaf
+-- hash: 4b89bf21446f9a64438b5a13d48e95eb1abf0d698e8846666e2d6355ec654ced
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -32,8 +32,8 @@ library
       Database.CharacterDB
       Database.WordADayDB
       HttpAPI.API
+      HttpAPI.AuthAPI
       HttpAPI.CharacterAPI
-      HttpAPI.LoginAPI
       HttpAPI.UserAPI
       HttpAPI.WordADayAPI
       Importer.CharacterImporter
@@ -61,10 +61,12 @@ library
     , lens-aeson
     , memory
     , mtl
+    , postgresql-simple
     , random
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-elm
     , servant-server
     , split
     , text >=1.2
@@ -97,11 +99,13 @@ executable real-world-mandarin-exe
     , lens-aeson
     , memory
     , mtl
+    , postgresql-simple
     , random
     , real-world-mandarin
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-elm
     , servant-server
     , split
     , text >=1.2
@@ -135,11 +139,13 @@ test-suite real-world-mandarin-test
     , lens-aeson
     , memory
     , mtl
+    , postgresql-simple
     , random
     , real-world-mandarin
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-elm
     , servant-server
     , split
     , text >=1.2

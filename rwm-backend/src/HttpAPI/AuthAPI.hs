@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 
-module HttpAPI.LoginAPI
+module HttpAPI.AuthAPI
     ( LoginAPI(..)
     , loginServer
     ) where
@@ -13,7 +13,9 @@ import GHC.Generics (Generic)
 import Data.Text
 import Data.Aeson
 import Data.Maybe (maybe)
+import Data.Time.Clock (getCurrentTime, addUTCTime, UTCTime)
 import Servant.Auth.Server
+import Control.Exception (try, Exception)
 
 -- | Body payload for registering a user
 data Register = 
@@ -47,9 +49,9 @@ instance FromJSON LoginRegistrationError
 
 data UserJWT = 
     UserJWT
-        { _username :: !Text
-        , _password :: !Text
-        , _email    :: !Text
+        { exp      :: !UTCTime -- Experation date
+        , sub      :: !Int     -- Subject (user id)
+        , un       :: !Text    -- User name
         } deriving (Generic)
 
 instance FromJSON UserJWT
@@ -58,16 +60,19 @@ instance ToJSON UserJWT
 instance FromJWT UserJWT
 instance ToJWT UserJWT
 
-type NoContentWithLoginCookies = (Headers '[ Header "Set-Cookie" SetCookie
-                                            , Header "Set-Cookie" SetCookie]
-                                            NoContent)
+type NoContentAuth = (Headers '[ Header "Set-Cookie" SetCookie
+                               , Header "Set-Cookie" SetCookie
+                               ]
+                               NoContent )
 
-type LoginAPI = "login"
-        :> ReqBody '[JSON] Login
-        :> Verb 'POST 204 '[JSON] NoContentWithLoginCookies
-    :<|> "register"
+type LoginAPI = 
+    "auth" :> "login"
+           :> ReqBody '[JSON] Login
+           :> Verb 'POST 204 '[JSON] NoContentAuth
+        :<|> 
+    "auth" :> "register"
         :> ReqBody '[JSON] Register
-        :> Verb 'POST 204 '[JSON] NoContentWithLoginCookies
+        :> Verb 'POST 204 '[JSON] NoContentAuth
 
 loginServer :: Connection 
             -> CookieSettings
@@ -80,12 +85,12 @@ checkCredentials :: Connection
                  -> CookieSettings
                  -> JWTSettings
                  -> Login 
-                 -> Handler NoContentWithLoginCookies
+                 -> Handler NoContentAuth
 checkCredentials conn cs jwtCfg login = do
     maybeUser <- liftIO $ selectUserForLogin conn (username login) (password login)
     maybe loginError (setCookies cs jwtCfg) maybeUser
 
-loginError :: Handler NoContentWithLoginCookies
+loginError :: Handler NoContentAuth
 loginError = throwError err503 
     { errBody = encode 
         (LoginRegistrationError  "Incorrect username password combination.") 
@@ -94,17 +99,18 @@ loginError = throwError err503
 setCookies :: CookieSettings
            -> JWTSettings
            -> User
-           -> Handler NoContentWithLoginCookies
+           -> Handler NoContentAuth
 setCookies cs jwtCfg user = do
-    let (un, up, ue) = jwtFromUser user
-        userJWT      = UserJWT un up ue
+    exp           <- liftIO getCurrentTime
+    let (sub, un) = jwtFromUser user
+        userJWT   = UserJWT (addUTCTime 1.21e+6 exp) sub un
     mApplyCookies <- liftIO $ acceptLogin cs jwtCfg userJWT
     case mApplyCookies of
         Nothing -> throwError err401
         Just applyCookies -> return $ applyCookies NoContent
 
-registerPasswordError :: Handler NoContentWithLoginCookies
-registerPasswordError = throwError err503 
+registerPasswordError :: Handler NoContentAuth
+registerPasswordError = throwError err400
     { errBody = encode 
         (LoginRegistrationError  "Passwords do not match.") 
     }
@@ -113,13 +119,22 @@ registerUser :: Connection
              -> CookieSettings
              -> JWTSettings 
              -> Register 
-             -> Handler NoContentWithLoginCookies
+             -> Handler NoContentAuth
 registerUser conn cs jwtCfg register =
     if passwordOne register /= passwordTwo register
         then registerPasswordError
     else do
-        user <- liftIO $ registerNewUser conn
-                                         (registerUsername register)
-                                         (email register)
-                                         (passwordOne register)
-        setCookies cs jwtCfg user
+        userOrError <- liftIO (try (registerNewUser 
+                        conn
+                        (registerUsername register)
+                        (email register)
+                        (passwordOne register)) :: IO (Either ViolationError User))
+        case userOrError of
+            Right user -> setCookies cs jwtCfg user
+            Left ve -> uniqueValidationErrorHandler ve
+
+uniqueValidationErrorHandler :: ViolationError -> Handler NoContentAuth
+uniqueValidationErrorHandler (ViolationError e) = throwError err400
+    { errBody = encode 
+        (LoginRegistrationError e) 
+    }
