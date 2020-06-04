@@ -56,7 +56,8 @@ deriving instance Show Character
 deriving instance Eq Character
 
 instance Table CharacterT where
-    data PrimaryKey CharacterT f = CharacterId (Columnar f Int) deriving (Generic, Beamable)
+    data PrimaryKey CharacterT f = CharacterId (Columnar f Int)
+                                    deriving (Generic, Beamable)
     primaryKey = CharacterId . _charId
 
 deriving instance Show (PrimaryKey CharacterT Identity)
@@ -77,7 +78,8 @@ deriving instance Show Element
 deriving instance Eq Element
 
 instance Table ElementT where
-    data PrimaryKey ElementT f = ElementId (Columnar f Int) deriving (Generic, Beamable)
+    data PrimaryKey ElementT f = ElementId (Columnar f Int)
+                                    deriving (Generic, Beamable)
     primaryKey = ElementId . _elementId
 
 deriving instance Show (PrimaryKey ElementT Identity)
@@ -99,7 +101,8 @@ deriving instance Show User
 deriving instance Eq User
 
 instance Table UserT where
-    data PrimaryKey UserT f = UserId (Columnar f Int) deriving (Generic, Beamable)
+    data PrimaryKey UserT f = UserId (Columnar f Int) 
+                                deriving (Generic, Beamable)
     primaryKey = UserId . _userId
 
 deriving instance Show (PrimaryKey UserT Identity)
@@ -120,7 +123,8 @@ deriving instance Show UserCharacter
 deriving instance Eq UserCharacter
 
 instance Table UserCharacterT where
-    data PrimaryKey UserCharacterT f = UserCharacterId (Columnar f Int) deriving (Generic, Beamable)
+    data PrimaryKey UserCharacterT f = UserCharacterId (Columnar f Int) 
+                                        deriving (Generic, Beamable)
     primaryKey = UserCharacterId . _ucId
 
 deriving instance Show (PrimaryKey UserCharacterT Identity)
@@ -129,7 +133,8 @@ deriving instance Eq (PrimaryKey UserCharacterT Identity)
 -- | Inserts all the characters plus their elements that have been imported 
 -- from the Character Importer into the database.
 insertCharacters :: Connection -> [CharacterImport] -> IO ()
-insertCharacters conn = mapM_ (\ci -> insertCharacterT conn ci >>= insertElementT conn ci)
+insertCharacters conn =
+    mapM_ (\ci -> insertCharacterT conn ci >>= insertElementT conn ci)
 
 insertCharacterT :: Connection -> CharacterImport -> IO Character
 insertCharacterT conn = 
@@ -160,7 +165,10 @@ insertElementT conn ci cha = do
 -- in later GHC versions look at impredicative polymorphism
 newtype Some tag = This { getThis :: forall t. tag t }
 
-elementFromCharacterImport :: Connection -> Character -> CharacterImport -> IO [Some (Compose ElementT (QExpr Postgres))]
+elementFromCharacterImport :: Connection 
+                           -> Character
+                           -> CharacterImport
+                           -> IO [Some (Compose ElementT (QExpr Postgres))]
 elementFromCharacterImport conn cha ci = 
     let elementIdWithIndex = zip [1..] (elements ci)
         characterId = charId ci
@@ -229,9 +237,9 @@ registerNewUser :: Connection -> Text -> Text -> Text -> IO User
 registerNewUser conn username email pwd = do
     gen         <- getSystemDRG
     let (bs, _) = randomBytesGenerate 32 gen :: (ByteString, SystemDRG)
-        salt    = convertToBase Base64 bs :: ByteString
+        salt    = convertToBase Base64 bs
         passH   = generate (prfHMAC SHA256) (Parameters 4000 32) (encodeUtf8 pwd) salt :: ByteString
-        passH'  = decodeUtf8 (convertToBase Base64 passH) :: Text
+        passH'  = decodeUtf8 (convertToBase Base64 passH)
     users      <- catchViolation catchUniqueViolation $
                 runBeamPostgres conn $ runInsertReturningList $
                 insert (_tableUsers characterDB)

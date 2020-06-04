@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b89bf21446f9a64438b5a13d48e95eb1abf0d698e8846666e2d6355ec654ced
+-- hash: d18740aa0ff0df647e3c611f69a432671f2b696bf7e26609822c57a15b4cf1e0
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -54,6 +54,8 @@ library
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , elm-syntax
+    , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
     , jose
@@ -66,8 +68,8 @@ library
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
-    , servant-elm
     , servant-server
+    , servant-to-elm
     , split
     , text >=1.2
     , time
@@ -80,6 +82,7 @@ library
 executable real-world-mandarin-exe
   main-is: Main.hs
   other-modules:
+      Generator
       Paths_real_world_mandarin
   hs-source-dirs:
       app
@@ -92,6 +95,8 @@ executable real-world-mandarin-exe
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , elm-syntax
+    , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
     , jose
@@ -105,8 +110,8 @@ executable real-world-mandarin-exe
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
-    , servant-elm
     , servant-server
+    , servant-to-elm
     , split
     , text >=1.2
     , time
@@ -132,6 +137,8 @@ test-suite real-world-mandarin-test
     , beam-postgres >=0.4
     , bytestring
     , cryptonite
+    , elm-syntax
+    , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
     , jose
@@ -145,8 +152,8 @@ test-suite real-world-mandarin-test
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
-    , servant-elm
     , servant-server
+    , servant-to-elm
     , split
     , text >=1.2
     , time

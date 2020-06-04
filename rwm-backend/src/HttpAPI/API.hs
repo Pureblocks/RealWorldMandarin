@@ -11,8 +11,8 @@ import HttpAPI.WordADayAPI
 import HttpAPI.AuthAPI
 import Configuration.Config
 
-type API = "api" :> WordADayAPI
-     :<|> "api" :> LoginAPI
+type API = WordADayAPI
+      :<|> AuthAPI
 
 server :: Connection 
        -> CookieSettings

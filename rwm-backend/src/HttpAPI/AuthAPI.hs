@@ -1,8 +1,10 @@
-{-# LANGUAGE DataKinds, TypeOperators #-}
+{-# LANGUAGE DataKinds, TypeOperators, TemplateHaskell #-}
 
 module HttpAPI.AuthAPI
-    ( LoginAPI(..)
+    ( AuthAPI(..)
     , loginServer
+    , Register(..)
+    , Login(..)
     ) where
 
 import Servant
@@ -11,7 +13,7 @@ import Database.CharacterDB
 import Database.Beam.Postgres (Connection)
 import GHC.Generics (Generic)
 import Data.Text
-import Data.Aeson
+import Data.Aeson (FromJSON, ToJSON, encode)
 import Data.Maybe (maybe)
 import Data.Time.Clock (getCurrentTime, addUTCTime, UTCTime)
 import Servant.Auth.Server
@@ -65,19 +67,19 @@ type NoContentAuth = (Headers '[ Header "Set-Cookie" SetCookie
                                ]
                                NoContent )
 
-type LoginAPI = 
-    "auth" :> "login"
-           :> ReqBody '[JSON] Login
-           :> Verb 'POST 204 '[JSON] NoContentAuth
+type AuthAPI = 
+    "api" :> "auth" :> "login"
+            :> ReqBody '[JSON] Login
+            :> Verb 'POST 204 '[JSON] NoContentAuth
         :<|> 
-    "auth" :> "register"
-        :> ReqBody '[JSON] Register
-        :> Verb 'POST 204 '[JSON] NoContentAuth
+    "api" :> "auth" :> "register"
+            :> ReqBody '[JSON] Register
+            :> Verb 'POST 204 '[JSON] NoContentAuth
 
 loginServer :: Connection 
             -> CookieSettings
             -> JWTSettings 
-            -> Server LoginAPI
+            -> Server AuthAPI
 loginServer conn cs jwtCfg = checkCredentials conn cs jwtCfg 
                         :<|> registerUser conn cs jwtCfg 
 
@@ -131,10 +133,10 @@ registerUser conn cs jwtCfg register =
                         (passwordOne register)) :: IO (Either ViolationError User))
         case userOrError of
             Right user -> setCookies cs jwtCfg user
-            Left ve -> uniqueValidationErrorHandler ve
+            Left ve    -> uniqueViolationErrorHandler ve
 
-uniqueValidationErrorHandler :: ViolationError -> Handler NoContentAuth
-uniqueValidationErrorHandler (ViolationError e) = throwError err400
+uniqueViolationErrorHandler :: ViolationError -> Handler NoContentAuth
+uniqueViolationErrorHandler (ViolationError e) = throwError err400
     { errBody = encode 
         (LoginRegistrationError e) 
     }

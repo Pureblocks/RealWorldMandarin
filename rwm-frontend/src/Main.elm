@@ -21,6 +21,8 @@ import Bootstrap.Button as Button
 import Bootstrap.Modal as Modal
 import Color exposing (Color)
 import Debug exposing (log)
+import Clients.AuthAPI as AuthAPI
+import Http exposing (Error)
 
 -- Colours: https://coolors.co/e54b4b-ffa987-f7ebe8-444140-1e1e24
 
@@ -105,12 +107,14 @@ type Msg
     | ShowModal
     | UpdateLoginUsername String
     | UpdateLoginPassword String
-    | Login
+    | SubmitLogin
     | UpdateRegisterUsername String
     | UpdateRegisterEmail String
     | UpdateRegisterPasswordOne String
     | UpdateRegisterPasswordTwo String
-    | Register
+    | SubmitRegister
+    | SuccessRegister
+    | FailureRegister
 
 
 subscriptions : Model -> Sub Msg
@@ -158,7 +162,7 @@ update msg model =
             , Cmd.none
             )
 
-        Login -> 
+        SubmitLogin -> 
             log (model.loginForm.username ++ model.loginForm.password) ( model
             , Cmd.none
             )
@@ -183,9 +187,29 @@ update msg model =
                 registerFormUpdated = { form | passwordTwo = password }
             in ( { model | registerForm = registerFormUpdated}, Cmd.none )
 
-        Register ->
-            log "Registering" ( model , Cmd.none )
+        SubmitRegister ->
+            ( model
+            , AuthAPI.postApiAuthRegister (toRegister model.registerForm) handleRegistrationResult
+            )
 
+        SuccessRegister ->
+            log "Success registration" ( model, Cmd.none )
+
+        FailureRegister ->
+            log "Failure registration" ( model, Cmd.none )
+
+handleRegistrationResult : Result Http.Error (AuthAPI.NoContent) -> Msg
+handleRegistrationResult r = case r of
+    Ok _    -> SuccessRegister
+    Err err -> FailureRegister
+
+toRegister : RegisterForm -> AuthAPI.Register
+toRegister rf =
+    { registerUsername = (rf.username)
+    , email = (rf.email)
+    , passwordOne = (rf.passwordOne)
+    , passwordTwo = (rf.passwordTwo)    
+    } 
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
 urlUpdate url model =
@@ -256,7 +280,7 @@ pageHome model =
 loginForm : Model -> Html Msg
 loginForm model = 
     Form.form 
-        [ onSubmit Login, action "javascript:void(0);" ]
+        [ onSubmit SubmitLogin, action "javascript:void(0);" ]
         [ Form.group 
             [ Form.attrs 
                 [ value model.loginForm.username
@@ -283,7 +307,7 @@ loginForm model =
 registerForm : Model -> Html Msg
 registerForm model =
     Form.form
-        [ onSubmit Register, action "javascript:void(0);" ]
+        [ onSubmit SubmitRegister, action "javascript:void(0);" ]
         [ Form.group
             [ Form.attrs 
                 [ value model.registerForm.username

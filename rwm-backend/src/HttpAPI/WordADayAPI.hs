@@ -15,8 +15,8 @@ import GHC.Generics (Generic)
 import Data.Text
 import Data.Aeson
 
-type WordADayAPI = "word-a-day" :> "tweets"     :> Get '[JSON] [HskTweetCreated]
-              :<|> "word-a-day" :> "hsk-words"  :> Get '[JSON] [MandarinHSKWord] 
+type WordADayAPI = "api" :> "word-a-day" :> "tweets"     :> Get '[JSON] [HskTweetCreated]
+              :<|> "api" :> "word-a-day" :> "hsk-words"  :> Get '[JSON] [MandarinHSKWord] 
 
 wordADayServer :: Connection -> Server WordADayAPI
 wordADayServer conn = liftIO (selectAllTweets conn) 
