@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Html exposing (Html, div, text, h1, h2, img)
+import Html exposing (Html, div, text, h1, h2, h4, img)
 import Html as HTML
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -14,11 +14,10 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
-import Bootstrap.Form.Checkbox as Checkbox
+import Html.Events exposing (onSubmit, onInput)
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Button as Button
-import Bootstrap.ListGroup as Listgroup
 import Bootstrap.Modal as Modal
 import Color exposing (Color)
 import Debug exposing (log)
@@ -37,12 +36,26 @@ type alias User =
     , jwt : String
     }
 
+type alias LoginForm =
+    { username : String
+    , password : String
+    }
+
+type alias RegisterForm =
+    { username    : String
+    , email       : String
+    , passwordOne : String
+    , passwordTwo : String
+    }
+
 type alias Model =
     { navKey : Navigation.Key
     , page : Page
     , navState : Navbar.State
     , modalVisibility : Modal.Visibility
     , user : Maybe User
+    , loginForm : LoginForm
+    , registerForm : RegisterForm
     }
 
 -- | TODO add login
@@ -76,6 +89,8 @@ init flags url key =
                           , page = Home
                           , modalVisibility= Modal.hidden
                           , user = Nothing 
+                          , loginForm = LoginForm "" ""
+                          , registerForm = RegisterForm "" "" "" ""
                           }
     in
         ( model, Cmd.batch [ urlCmd, navCmd ] )
@@ -88,6 +103,14 @@ type Msg
     | NavMsg Navbar.State
     | CloseModal
     | ShowModal
+    | UpdateLoginUsername String
+    | UpdateLoginPassword String
+    | Login
+    | UpdateRegisterUsername String
+    | UpdateRegisterEmail String
+    | UpdateRegisterPasswordOne String
+    | UpdateRegisterPasswordTwo String
+    | Register
 
 
 subscriptions : Model -> Sub Msg
@@ -125,6 +148,43 @@ update msg model =
             , Cmd.none
             )
 
+        UpdateLoginUsername username ->
+            ( { model | loginForm = LoginForm username model.loginForm.password }
+            , Cmd.none 
+            )
+
+        UpdateLoginPassword password ->
+            ( { model | loginForm = LoginForm model.loginForm.username password }
+            , Cmd.none
+            )
+
+        Login -> 
+            log (model.loginForm.username ++ model.loginForm.password) ( model
+            , Cmd.none
+            )
+
+        UpdateRegisterUsername username -> 
+            let form = model.registerForm
+                registerFormUpdated = { form | username = username }
+            in ( { model | registerForm = registerFormUpdated}, Cmd.none )
+
+        UpdateRegisterEmail email -> 
+            let form = model.registerForm
+                registerFormUpdated = { form | email = email }
+            in ( { model | registerForm = registerFormUpdated}, Cmd.none )
+
+        UpdateRegisterPasswordOne password -> 
+            let form = model.registerForm
+                registerFormUpdated = { form | passwordOne = password }
+            in ( { model | registerForm = registerFormUpdated}, Cmd.none )
+
+        UpdateRegisterPasswordTwo password -> 
+            let form = model.registerForm
+                registerFormUpdated = { form | passwordTwo = password }
+            in ( { model | registerForm = registerFormUpdated}, Cmd.none )
+
+        Register ->
+            log "Registering" ( model , Cmd.none )
 
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
@@ -161,7 +221,7 @@ view model =
     case model.page of
         Home -> 
             { title = "Welcome to Real World Mandarin"
-            , body = [ div [] pageHome ]
+            , body = [ div [] (pageHome model) ]
             }
 
         _ -> 
@@ -175,30 +235,95 @@ view model =
                 ]
             }
 
-pageHome : List (Html Msg)
-pageHome = 
+pageHome : Model -> List (Html Msg)
+pageHome model = 
     [ Grid.container []
         [ Grid.row []
-            [ Grid.col [] []
-            , Grid.col []
-                [ Form.form 
-                    []
-                    [ Form.group []
-                        [ Form.label [for "username"] [ text "Username"]
-                        , Input.email [ Input.id "username" ]
-                        ]
-                    , Form.group []
-                        [ Form.label [for "mypwd"] [ text "Password"]
-                        , Input.password [ Input.id "mypwd" ]
-                        ]
-                    , Checkbox.checkbox [ Checkbox.id "remember" ] "remember me"
-                    , Button.submitButton [ Button.primary] [ text "Login" ]
-                    ]
+            [ Grid.col 
+                [] 
+                [ h4 [] [ text "Login" ]
+                , loginForm model
                 ]
-            , Grid.col [] []
+            , Grid.col 
+                []
+                [ h4 [] [ text "Register" ]
+                , registerForm model
+                ]
             ]
         ]
     ]
+
+loginForm : Model -> Html Msg
+loginForm model = 
+    Form.form 
+        [ onSubmit Login, action "javascript:void(0);" ]
+        [ Form.group 
+            [ Form.attrs 
+                [ value model.loginForm.username
+                , onInput (\v -> UpdateLoginUsername v)
+                ]
+            ]
+            [ Form.label [for "username"] [ text "Username"]
+            , Input.text [ Input.id "username" ]
+            ]
+        , Form.group 
+            [ Form.attrs 
+                [ value model.loginForm.password
+                , onInput (\v -> UpdateLoginPassword v)
+                ]
+            ]
+            [ Form.label [for "mypwd"] [ text "Password"]
+            , Input.password [ Input.id "mypwd" ]
+            ]
+        , Button.submitButton
+            [ Button.primary ] 
+            [ text "Login" ]
+        ]
+
+registerForm : Model -> Html Msg
+registerForm model =
+    Form.form
+        [ onSubmit Register, action "javascript:void(0);" ]
+        [ Form.group
+            [ Form.attrs 
+                [ value model.registerForm.username
+                , onInput (\v -> UpdateRegisterUsername v)
+                ]
+            ]
+            [ Form.label [for "registerUsername"] [ text "Username"]
+            , Input.text [ Input.id "registerUsername" ]
+            ]
+        , Form.group
+            [ Form.attrs 
+                [ value model.registerForm.email
+                , onInput (\v -> UpdateRegisterEmail v)
+                ]
+            ]
+            [ Form.label [for "registerEmail"] [ text "E-Mail"]
+            , Input.email [ Input.id "registerEmail" ]
+            ]
+        , Form.group 
+            [ Form.attrs 
+                [ value model.registerForm.passwordOne
+                , onInput (\v -> UpdateRegisterPasswordOne v)
+                ]
+            ]
+            [ Form.label [for "passwordOne"] [ text "Password"]
+            , Input.password [ Input.id "passwordOne" ]
+            ]
+        , Form.group 
+            [ Form.attrs 
+                [ value model.registerForm.passwordTwo
+                , onInput (\v -> UpdateRegisterPasswordTwo v)
+                ]
+            ]
+            [ Form.label [for "passwordTwo"] [ text "Repeat password"]
+            , Input.password [ Input.id "passwordTwo" ]
+            ]
+        , Button.submitButton
+            [ Button.primary ] 
+            [ text "Register" ]
+        ]
 
 topMenu : Model -> Html Msg
 topMenu model =
@@ -270,7 +395,7 @@ mainContent model =
                 pageNotFound
 
             Home ->
-                pageHome
+                pageHome model
 
 
 pageDashboard : Model -> List (Html Msg)
