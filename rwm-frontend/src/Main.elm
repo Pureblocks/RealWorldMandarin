@@ -21,8 +21,9 @@ import Bootstrap.Button as Button
 import Bootstrap.Modal as Modal
 import Color exposing (Color)
 import Debug exposing (log)
-import Clients.AuthAPI as AuthAPI
-import Http exposing (Error)
+import Http
+import Clients.AuthAPI exposing (postApiAuthRegister)
+import Clients.Models.AuthAPI exposing (Register, Login)
 
 -- Colours: https://coolors.co/e54b4b-ffa987-f7ebe8-444140-1e1e24
 
@@ -34,8 +35,6 @@ type alias Flags =
 
 type alias User =
     { username : String
-    , email : String
-    , jwt : String
     }
 
 type alias LoginForm =
@@ -60,7 +59,6 @@ type alias Model =
     , registerForm : RegisterForm
     }
 
--- | TODO add login
 type Page
     = Home
     | Dashboard
@@ -113,7 +111,7 @@ type Msg
     | UpdateRegisterPasswordOne String
     | UpdateRegisterPasswordTwo String
     | SubmitRegister
-    | SuccessRegister
+    | RegisterResponse (Result (Http.Error , Maybe { metadata : Http.Metadata, body : String }) ())
     | FailureRegister
 
 
@@ -189,21 +187,27 @@ update msg model =
 
         SubmitRegister ->
             ( model
-            , AuthAPI.postApiAuthRegister (toRegister model.registerForm) handleRegistrationResult
+            , Cmd.map RegisterResponse (postApiAuthRegister (toRegister model.registerForm))
             )
+    
+            -- ( model
+            -- , AuthAPI.postApiAuthRegister (toRegister model.registerForm) handleRegistrationResult
+            -- )
 
-        SuccessRegister ->
-            log "Success registration" ( model, Cmd.none )
+        RegisterResponse result ->
+            case result of
+                Ok _ -> 
+                    log "Success registration" ( model, Cmd.none )
+
+                Err (error, maybeReason) -> 
+                    log ("Failure registration: " ++ Maybe.withDefault "" (Maybe.map (\x -> x.body) maybeReason)) ( model, Cmd.none )
+            
 
         FailureRegister ->
             log "Failure registration" ( model, Cmd.none )
 
-handleRegistrationResult : Result Http.Error (AuthAPI.NoContent) -> Msg
-handleRegistrationResult r = case r of
-    Ok _    -> SuccessRegister
-    Err err -> FailureRegister
 
-toRegister : RegisterForm -> AuthAPI.Register
+toRegister : RegisterForm -> Register
 toRegister rf =
     { registerUsername = (rf.username)
     , email = (rf.email)
