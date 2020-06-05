@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d18740aa0ff0df647e3c611f69a432671f2b696bf7e26609822c57a15b4cf1e0
+-- hash: c2bf4c2ff385b754c4b5f5f3797c870ea9e9af11ff8869fe23291787b05cd059
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -53,8 +53,12 @@ library
     , beam-core >=0.8
     , beam-postgres >=0.4
     , bytestring
+    , case-insensitive
     , cryptonite
+    , directory
     , elm-syntax
+    , filepath
+    , generics-sop
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
@@ -73,6 +77,7 @@ library
     , split
     , text >=1.2
     , time
+    , unordered-containers
     , uri-encode
     , wai
     , warp
@@ -94,8 +99,12 @@ executable real-world-mandarin-exe
     , beam-core >=0.8
     , beam-postgres >=0.4
     , bytestring
+    , case-insensitive
     , cryptonite
+    , directory
     , elm-syntax
+    , filepath
+    , generics-sop
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
@@ -115,6 +124,7 @@ executable real-world-mandarin-exe
     , split
     , text >=1.2
     , time
+    , unordered-containers
     , uri-encode
     , wai
     , warp
@@ -136,8 +146,12 @@ test-suite real-world-mandarin-test
     , beam-core >=0.8
     , beam-postgres >=0.4
     , bytestring
+    , case-insensitive
     , cryptonite
+    , directory
     , elm-syntax
+    , filepath
+    , generics-sop
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
@@ -157,6 +171,7 @@ test-suite real-world-mandarin-test
     , split
     , text >=1.2
     , time
+    , unordered-containers
     , uri-encode
     , wai
     , warp

@@ -49,6 +49,11 @@ dependencies:
   - servant-to-elm
   - haskell-to-elm
   - elm-syntax
+  - generics-sop
+  - unordered-containers
+  - directory
+  - filepath
+  - case-insensitive
 
 default-extensions: 
   - OverloadedStrings

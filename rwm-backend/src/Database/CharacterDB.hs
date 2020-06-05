@@ -8,6 +8,7 @@ module Database.CharacterDB
     , selectNotlearnedCharacters
     , selectUserForLogin
     , jwtFromUser
+    , userNameFromUser
     , registerNewUser
     , ViolationError(..)
     ) where
@@ -231,6 +232,9 @@ checkPassword password user =
 -- | Simple helper function to extract values required for UserJWT
 jwtFromUser :: User -> (Int, Text)
 jwtFromUser user = (_userId user, _userUsername user)
+
+userNameFromUser :: User -> Text
+userNameFromUser = _userUsername
 
 -- | Inserts a new user into the database
 registerNewUser :: Connection -> Text -> Text -> Text -> IO User

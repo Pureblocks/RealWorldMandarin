@@ -13,6 +13,7 @@ import Configuration.Config
 
 type API = WordADayAPI
       :<|> AuthAPI
+      :<|> Raw
 
 server :: Connection 
        -> CookieSettings
@@ -20,6 +21,7 @@ server :: Connection
        -> Server API
 server conn cs jwtCfg = wordADayServer conn 
                    :<|> loginServer conn cs jwtCfg 
+                   :<|> serveDirectoryFileServer "resources/web/"
 
 api :: Proxy API
 api = Proxy
