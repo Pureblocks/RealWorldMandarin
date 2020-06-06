@@ -32,6 +32,9 @@ dependencies:
   - servant-auth >= 0.3
   - servant-auth-server >= 0.4.5
   - http-api-data >= 0.3.9
+  - http-media
+  - lucid
+  - blaze-html
   - wai
   - warp
   - aeson

@@ -20,6 +20,7 @@ import Language.Haskell.To.Elm
 import Servant.To.Elm
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath.Posix (takeDirectory)
+import HttpAPI.FrontEnd (ElmSeed)
 
 main :: IO ()
 main = do 
@@ -27,6 +28,7 @@ main = do
     let definitions = map (elmEndpointDefinition "Config.urlBase" ["Clients.AuthAPI"]) (elmEndpoints @AuthAPI)
             <> jsonDefinitions @Register 
             <> jsonDefinitions @Login
+            <> jsonDefinitions @ElmSeed
         modules =
             Pretty.modules $
                 Simplification.simplifyDefinition <$> definitions
@@ -69,4 +71,19 @@ instance HasElmDecoder Aeson.Value Login where
 instance HasElmEncoder Aeson.Value Login where
   elmEncoderDefinition =
     Just $ deriveElmJSONEncoder @Login defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.loginEncoder"
+
+instance SOP.Generic ElmSeed
+instance SOP.HasDatatypeInfo ElmSeed
+
+instance HasElmType ElmSeed where
+    elmDefinition =
+        Just $ deriveElmTypeDefinition @ElmSeed defaultOptions "Models.ElmSeed.ElmSeed"
+
+instance HasElmDecoder Aeson.Value ElmSeed where
+  elmDecoderDefinition =
+    Just $ deriveElmJSONDecoder @ElmSeed defaultOptions Aeson.defaultOptions "Models.ElmSeed.elmSeedDecoder"
+
+instance HasElmEncoder Aeson.Value ElmSeed where
+  elmEncoderDefinition =
+    Just $ deriveElmJSONEncoder @ElmSeed defaultOptions Aeson.defaultOptions "Models.ElmSeed.elmSeedEncoder"
     

@@ -1,10 +1,11 @@
-{-# LANGUAGE DataKinds, TypeOperators, TemplateHaskell #-}
+{-# LANGUAGE DataKinds, TypeOperators #-}
 
 module HttpAPI.AuthAPI
     ( AuthAPI(..)
     , loginServer
     , Register(..)
     , Login(..)
+    , UserJWT(..)
     ) where
 
 import Servant

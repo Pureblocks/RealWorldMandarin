@@ -10,20 +10,23 @@ import Database.Beam.Postgres (Connection)
 import HttpAPI.WordADayAPI
 import HttpAPI.AuthAPI
 import Configuration.Config
+import HttpAPI.FrontEnd
 
-type API = WordADayAPI
+type API auths = WordADayAPI
       :<|> AuthAPI
+      :<|> Auth auths UserJWT :> FrontEndAPI
       :<|> Raw
 
 server :: Connection 
        -> CookieSettings
        -> JWTSettings 
-       -> Server API
+       -> Server (API auths)
 server conn cs jwtCfg = wordADayServer conn 
                    :<|> loginServer conn cs jwtCfg 
+                   :<|> frontEndAPIServer
                    :<|> serveDirectoryFileServer "resources/web/"
 
-api :: Proxy API
+api :: Proxy (API '[JWT])
 api = Proxy
 
 app :: Connection -> Config -> Application

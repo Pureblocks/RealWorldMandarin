@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c2bf4c2ff385b754c4b5f5f3797c870ea9e9af11ff8869fe23291787b05cd059
+-- hash: 4cd441cc690d29b1c4e432ad7047889b289326c270f2521b061d3d8ad7041c6c
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -34,6 +34,8 @@ library
       HttpAPI.API
       HttpAPI.AuthAPI
       HttpAPI.CharacterAPI
+      HttpAPI.FrontEnd
+      HttpAPI.HTML
       HttpAPI.UserAPI
       HttpAPI.WordADayAPI
       Importer.CharacterImporter
@@ -52,6 +54,7 @@ library
     , base >=4.7 && <5
     , beam-core >=0.8
     , beam-postgres >=0.4
+    , blaze-html
     , bytestring
     , case-insensitive
     , cryptonite
@@ -62,9 +65,11 @@ library
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
+    , http-media
     , jose
     , lens
     , lens-aeson
+    , lucid
     , memory
     , mtl
     , postgresql-simple
@@ -98,6 +103,7 @@ executable real-world-mandarin-exe
     , base >=4.7 && <5
     , beam-core >=0.8
     , beam-postgres >=0.4
+    , blaze-html
     , bytestring
     , case-insensitive
     , cryptonite
@@ -108,9 +114,11 @@ executable real-world-mandarin-exe
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
+    , http-media
     , jose
     , lens
     , lens-aeson
+    , lucid
     , memory
     , mtl
     , postgresql-simple
@@ -145,6 +153,7 @@ test-suite real-world-mandarin-test
     , base >=4.7 && <5
     , beam-core >=0.8
     , beam-postgres >=0.4
+    , blaze-html
     , bytestring
     , case-insensitive
     , cryptonite
@@ -155,9 +164,11 @@ test-suite real-world-mandarin-test
     , haskell-to-elm
     , http-api-data >=0.3.9
     , http-client
+    , http-media
     , jose
     , lens
     , lens-aeson
+    , lucid
     , memory
     , mtl
     , postgresql-simple
