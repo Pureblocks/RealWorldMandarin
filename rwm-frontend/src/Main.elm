@@ -22,7 +22,7 @@ import Bootstrap.Modal as Modal
 import Color exposing (Color)
 import Debug exposing (log)
 import Http
-import Clients.AuthAPI exposing (postApiAuthRegister)
+import Clients.AuthAPI exposing (postApiAuthRegister, postApiAuthLogin)
 import Clients.Models.AuthAPI exposing (Register, Login)
 
 -- Colours: https://coolors.co/e54b4b-ffa987-f7ebe8-444140-1e1e24
@@ -54,7 +54,7 @@ type alias Model =
     , page : Page
     , navState : Navbar.State
     , modalVisibility : Modal.Visibility
-    , user : Maybe User
+    , loggedIn: Bool
     , loginForm : LoginForm
     , registerForm : RegisterForm
     }
@@ -77,6 +77,8 @@ main =
         , onUrlChange = UrlChange
         }
 
+-- | TODO check if logged in when loading the init page for a user not always having
+-- to login
 init : Flags -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
@@ -86,9 +88,9 @@ init flags url key =
         ( model, urlCmd ) =
             urlUpdate url { navKey = key
                           , navState = navState
-                          , page = Home
+                          , page = Home -- TODO set page to according route also return routes if not start with /api/ to index.html
                           , modalVisibility= Modal.hidden
-                          , user = Nothing 
+                          , loggedIn = False 
                           , loginForm = LoginForm "" ""
                           , registerForm = RegisterForm "" "" "" ""
                           }
@@ -106,6 +108,8 @@ type Msg
     | UpdateLoginUsername String
     | UpdateLoginPassword String
     | SubmitLogin
+    | LoginResponse (Result (Http.Error , Maybe { metadata : Http.Metadata, body : String }) ())
+    | FailureLogin
     | UpdateRegisterUsername String
     | UpdateRegisterEmail String
     | UpdateRegisterPasswordOne String
@@ -161,9 +165,19 @@ update msg model =
             )
 
         SubmitLogin -> 
-            log (model.loginForm.username ++ model.loginForm.password) ( model
-            , Cmd.none
-            )
+            ( model
+            , Cmd.map LoginResponse (postApiAuthLogin (toLogin model.loginForm)))
+
+        LoginResponse result ->
+            case result of
+                Ok _ -> 
+                    ( { model | loggedIn = True }, Navigation.pushUrl model.navKey "/dashboard" )
+
+                Err (error, maybeReason) -> 
+                    log ("Failure login: " ++ Maybe.withDefault "" (Maybe.map (\x -> x.body) maybeReason)) ( model, Cmd.none )
+
+        FailureLogin ->
+            log "Failure login" ( model, Cmd.none )
 
         UpdateRegisterUsername username -> 
             let form = model.registerForm
@@ -189,15 +203,11 @@ update msg model =
             ( model
             , Cmd.map RegisterResponse (postApiAuthRegister (toRegister model.registerForm))
             )
-    
-            -- ( model
-            -- , AuthAPI.postApiAuthRegister (toRegister model.registerForm) handleRegistrationResult
-            -- )
 
         RegisterResponse result ->
             case result of
                 Ok _ -> 
-                    log "Success registration" ( model, Cmd.none )
+                    ( { model | loggedIn = True }, Navigation.pushUrl model.navKey "/dashboard" )
 
                 Err (error, maybeReason) -> 
                     log ("Failure registration: " ++ Maybe.withDefault "" (Maybe.map (\x -> x.body) maybeReason)) ( model, Cmd.none )
@@ -213,21 +223,27 @@ toRegister rf =
     , email = (rf.email)
     , passwordOne = (rf.passwordOne)
     , passwordTwo = (rf.passwordTwo)    
-    } 
+    }
+
+toLogin : LoginForm -> Login
+toLogin lf =
+    { loginUsername = lf.username
+    , password = lf.password
+    }
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
 urlUpdate url model =
-    case model.user of
-        Nothing ->
-            ( { model | page = Home }, Cmd.none )
-
-        Just user ->
+    if model.loggedIn
+        then
             case decode url of
                 Nothing ->
                     ( { model | page = NotFound }, Cmd.none )
 
                 Just route ->
                     ( { model | page = route }, Cmd.none )
+        else
+            ( { model | page = Home }, Cmd.none )
+            
 
 
 decode : Url -> Maybe Page
@@ -390,7 +406,7 @@ topMenu model =
                         ] 
                         [ HTML.a
                             [ class "dropdown-item"
-                            , href "/"
+                            , href "/dashboard"
                             ]
                             [ text "Dashboard" ]
                         , HTML.a

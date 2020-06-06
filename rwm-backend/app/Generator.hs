@@ -6,7 +6,7 @@
 
 module Generator where
 
-import HttpAPI.AuthAPI (AuthAPI, Register, Login, UserLogin)
+import HttpAPI.AuthAPI (AuthAPI, Register, Login)
 import qualified Data.Aeson as Aeson
 import Data.Foldable
 import qualified Data.HashMap.Lazy as HashMap
@@ -27,7 +27,6 @@ main = do
     let definitions = map (elmEndpointDefinition "Config.urlBase" ["Clients.AuthAPI"]) (elmEndpoints @AuthAPI)
             <> jsonDefinitions @Register 
             <> jsonDefinitions @Login
-            <> jsonDefinitions @UserLogin
         modules =
             Pretty.modules $
                 Simplification.simplifyDefinition <$> definitions
@@ -70,20 +69,4 @@ instance HasElmDecoder Aeson.Value Login where
 instance HasElmEncoder Aeson.Value Login where
   elmEncoderDefinition =
     Just $ deriveElmJSONEncoder @Login defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.loginEncoder"
-
-instance SOP.Generic UserLogin
-instance SOP.HasDatatypeInfo UserLogin
-
-instance HasElmType UserLogin where
-    elmDefinition =
-        Just $ deriveElmTypeDefinition @UserLogin defaultOptions "Clients.Models.AuthAPI.UserLogin"
-
-instance HasElmDecoder Aeson.Value UserLogin where
-  elmDecoderDefinition =
-    Just $ deriveElmJSONDecoder @UserLogin defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.userLoginDecoder"
-
-instance HasElmEncoder Aeson.Value UserLogin where
-  elmEncoderDefinition =
-    Just $ deriveElmJSONEncoder @UserLogin defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.userLoginEncoder"
-
-
+    

@@ -30,17 +30,17 @@ registerDecoder =
 
 
 type alias Login  =
-    { username : String, password : String }
+    { loginUsername : String, password : String }
 
 
 loginEncoder : Login -> Json.Encode.Value
 loginEncoder a =
-    Json.Encode.object [ ("username" , Json.Encode.string a.username)
+    Json.Encode.object [ ("loginUsername" , Json.Encode.string a.loginUsername)
     , ("password" , Json.Encode.string a.password) ]
 
 
 loginDecoder : Json.Decode.Decoder Login
 loginDecoder =
     Json.Decode.succeed Login |>
-    Json.Decode.Pipeline.required "username" Json.Decode.string |>
+    Json.Decode.Pipeline.required "loginUsername" Json.Decode.string |>
     Json.Decode.Pipeline.required "password" Json.Decode.string
