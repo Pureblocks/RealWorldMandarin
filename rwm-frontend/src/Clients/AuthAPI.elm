@@ -3,10 +3,11 @@ module Clients.AuthAPI exposing (..)
 import Clients.Models.AuthAPI
 import Config
 import Http
+import Json.Decode
 
 
 postApiAuthLogin : Clients.Models.AuthAPI.Login -> Cmd (Result (Http.Error , Maybe { metadata : Http.Metadata
-    , body : String }) ())
+    , body : String }) Clients.Models.AuthAPI.UserJWT)
 postApiAuthLogin a =
     Http.request { method = "POST"
     , headers = []
@@ -26,18 +27,14 @@ postApiAuthLogin a =
             Err (Http.BadStatus c.statusCode , Just { metadata = c, body = d })
         
         Http.GoodStatus_ c d ->
-            if d == "" then
-                Ok ()
-            
-            else
-                Err (Http.BadBody "Expected the response body to be empty" , Just { metadata = c
-                , body = d }))
+            Result.mapError (\e -> (Http.BadBody (Json.Decode.errorToString e) , Just { metadata = c
+            , body = d })) (Json.Decode.decodeString Clients.Models.AuthAPI.userJwtDecoder d))
     , timeout = Nothing
     , tracker = Nothing }
 
 
 postApiAuthRegister : Clients.Models.AuthAPI.Register -> Cmd (Result (Http.Error , Maybe { metadata : Http.Metadata
-    , body : String }) ())
+    , body : String }) Clients.Models.AuthAPI.UserJWT)
 postApiAuthRegister a =
     Http.request { method = "POST"
     , headers = []
@@ -57,11 +54,7 @@ postApiAuthRegister a =
             Err (Http.BadStatus c.statusCode , Just { metadata = c, body = d })
         
         Http.GoodStatus_ c d ->
-            if d == "" then
-                Ok ()
-            
-            else
-                Err (Http.BadBody "Expected the response body to be empty" , Just { metadata = c
-                , body = d }))
+            Result.mapError (\e -> (Http.BadBody (Json.Decode.errorToString e) , Just { metadata = c
+            , body = d })) (Json.Decode.decodeString Clients.Models.AuthAPI.userJwtDecoder d))
     , timeout = Nothing
     , tracker = Nothing }

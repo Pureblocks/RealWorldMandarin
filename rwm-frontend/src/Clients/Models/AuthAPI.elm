@@ -44,3 +44,20 @@ loginDecoder =
     Json.Decode.succeed Login |>
     Json.Decode.Pipeline.required "loginUsername" Json.Decode.string |>
     Json.Decode.Pipeline.required "password" Json.Decode.string
+
+
+type alias UserJWT  =
+    { sub : Int, un : String }
+
+
+userJwtEncoder : UserJWT -> Json.Encode.Value
+userJwtEncoder a =
+    Json.Encode.object [ ("sub" , Json.Encode.int a.sub)
+    , ("un" , Json.Encode.string a.un) ]
+
+
+userJwtDecoder : Json.Decode.Decoder UserJWT
+userJwtDecoder =
+    Json.Decode.succeed UserJWT |>
+    Json.Decode.Pipeline.required "sub" Json.Decode.int |>
+    Json.Decode.Pipeline.required "un" Json.Decode.string

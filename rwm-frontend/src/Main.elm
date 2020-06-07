@@ -1,13 +1,12 @@
 module Main exposing (main)
 
 import Browser exposing (Document)
-import Html exposing (text)
+import Html as Html
 import Json.Decode as Decode
-import Models.ElmSeed exposing (ElmSeed, elmSeedDecoder)
+import Models.ElmSeed exposing (elmSeedDecoder)
 import Browser.Navigation as Nav
 import Url exposing (Url)
 import Browser as Browser
-import Url.Parser as Parser exposing ((</>), Parser, s, string)
 import Pages.Home as PageHome
 import Pages.Login as PageLogin
 import Pages.Dashboard as PageDashboard
@@ -15,21 +14,17 @@ import Pages.Learning as PageLearning
 import Pages.Training as PageTraining
 import Pages.Settings as PageSettings
 import Pages.NotFound as PageNotFound
+import Auth as Auth
+import Router exposing (Route)
 
-type alias Model =
-    { page : Page
-    , key : Nav.Key
-    , user : Maybe String
-    }
-
-type Page
-    = Home
-    | Login
-    | Dashboard
-    | Learning
-    | Training
-    | Settings
-    | NotFound
+type Model
+    = Home PageHome.Model
+    | Login PageLogin.Model
+    | Dashboard PageDashboard.Model
+    | Learning PageLearning.Model
+    | Training PageTraining.Model
+    | Settings PageSettings.Model
+    | NotFound PageNotFound.Model
 
 type Msg
     = ClickedLink Browser.UrlRequest
@@ -44,129 +39,237 @@ type Msg
 
 view : Model -> Document Msg
 view model =
-    case model.page of
-        Home -> 
-            Debug.todo "Implement Home"
+    let 
+        viewPage pageView toMsg subModel =
+            let 
+                { title, body } =
+                    pageView subModel
+            in 
+            { title = title
+            , body = List.map (Html.map toMsg) body
+            }
+    in
+    case model of
+        Home m ->
+            viewPage PageHome.view GotHomeMsg m
 
-        Login -> 
-            Debug.todo "Implement Login"
+        Login m ->
+            viewPage PageLogin.view GotLoginMsg m
 
-        Dashboard -> 
-            Debug.todo "Implement Dashboard"
+        Dashboard m ->
+            viewPage PageDashboard.view GotDashboardMsg m
 
-        Learning -> 
-            Debug.todo "Implement Learning"
+        Learning m ->
+            viewPage PageLearning.view GotLearningMsg m
 
-        Training -> 
-            Debug.todo "Implement Training"
+        Training m ->
+            viewPage PageTraining.view GotTrainingMsg m
 
-        Settings -> 
-            Debug.todo "Implement Settings"
+        Settings m ->
+            viewPage PageSettings.view GotSettingsMsg m
 
-        NotFound -> 
-            Debug.todo "Implement NotFound"
+        NotFound m ->
+            viewPage PageNotFound.view GotNotFoundMsg m
+
+fromAuth : (Auth.Auth -> a) -> Model -> a
+fromAuth f model =
+    case model of
+        Home m ->
+            f m.auth
+
+        Login m ->
+            f m.auth
+
+        Dashboard m ->
+            f m.auth
+
+        Learning m ->
+            f m.auth
+
+        Training m ->
+            f m.auth
+
+        Settings m ->
+            f m.auth
+
+        NotFound m ->
+            f m.auth
 
 update : Msg -> Model -> ( Model, Cmd Msg)
-update mainMsg model =
-    case mainMsg of
-        ClickedLink urlRequest ->
+update msg model =
+    case (msg, model) of
+        (ClickedLink urlRequest, _) ->
             case urlRequest of
                 Browser.External href -> 
                     ( model, Nav.load href )
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url))
-        ChangedUrl url ->
-            case urlToPage url of
-                Home -> 
-                    ( { model | page = Home }, Cmd.none )
-                
-                Login ->
-                    case model.user of
-                        Just _ ->
-                            ( model, Nav.pushUrl model.key ( pageToUrl Dashboard ))     
-                        
-                        Nothing ->  
-                            ( { model | page = Login }, Cmd.none )
-                page -> 
-                    case model.user of 
-                        Just u -> -- use us later as seed for the init function of the page
-                            ( { model | page = page }, Cmd.none )
-                        Nothing ->
-                            ( model, Nav.pushUrl model.key ( pageToUrl Login ))
-        GotHomeMsg msg ->
-            Debug.todo "Implement GotHomeMsg"
+                    ( model, Nav.pushUrl (fromAuth Auth.getNavKey model) (Url.toString url))
+        (ChangedUrl url, _) ->
+            changeRouteTo (Router.fromUrl url) model
+            
+        (GotHomeMsg subMsg, Home home) ->
+            PageHome.update subMsg home
+                |> updateWith Home GotHomeMsg
 
-        GotLoginMsg msg ->
-            Debug.todo "Implement GotLoginMsg"
+        (GotLoginMsg subMsg, Login login) ->
+            PageLogin.update subMsg login
+                |> updateWith Login GotLoginMsg
 
-        GotDashboardMsg msg ->
-            Debug.todo "Implement GotDashboardMsg"
+        (GotDashboardMsg subMsg, Dashboard dashboard) ->
+            PageDashboard.update subMsg dashboard
+                |> updateWith Dashboard GotDashboardMsg
 
-        GotLearningMsg msg ->
-            Debug.todo "Implement GotLearningMsg"
+        (GotLearningMsg subMsg, Learning learning) ->
+            PageLearning.update subMsg learning
+                |> updateWith Learning GotLearningMsg
 
-        GotTrainingMsg msg ->
-            Debug.todo "Implement GotTrainingMsg"
+        (GotTrainingMsg subMsg, Training training) ->
+            PageTraining.update subMsg training
+                |> updateWith Training GotTrainingMsg
 
-        GotSettingsMsg msg ->
-            Debug.todo "Implement GotSettingsMsg"
+        (GotSettingsMsg subMsg, Settings settings) ->
+            PageSettings.update subMsg settings
+                |> updateWith Settings GotSettingsMsg
 
-        GotNotFoundMsg msg ->
-            Debug.todo "Implement GotNotFoundMsg"
+        (GotNotFoundMsg subMsg, NotFound notFound) ->
+            PageNotFound.update subMsg notFound
+                |> updateWith NotFound GotNotFoundMsg
 
+        (_, _) ->
+            Debug.log "Received message for the wrong page" ( model, Cmd.none )
 
-urlToPage : Url -> Page
-urlToPage url =
-    Parser.parse parser url
-        |> Maybe.withDefault NotFound
-
-parser : Parser (Page -> a) a
-parser =
-    Parser.oneOf
-        [ Parser.map Home Parser.top
-        , Parser.map Login (s "app" </> s "login")
-        , Parser.map Dashboard (s "app" </> s "dashboard")
-        , Parser.map Learning (s "app" </> s "learning")
-        , Parser.map Training (s "app" </> s "training")
-        , Parser.map Settings (s "app" </> s "settings")
-        ]
-
-pageToUrl : Page -> String
-pageToUrl page =
-    case page of
-        Home -> ""
-        Login -> "/app/login"
-        Dashboard -> "/app/dashboard"
-        Learning -> "/app/learning"
-        Training -> "/app/training"
-        Settings -> "/app/settings"
-        NotFound -> ""
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
-pageFromString : String -> Page
-pageFromString s =
-    case s of
-        "Home"      -> Home
-        "Login"     -> Login
-        "Dashboard" -> Dashboard
-        "Learning"  -> Learning
-        "Training"  -> Training
-        "Settings"  -> Settings
-        _           -> NotFound
+changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo route model =
+    let auth = fromAuth identity model
+    in
+    case route of
+        Router.Home -> 
+            PageHome.init auth
+                |> updateWith Home GotHomeMsg 
+        Router.Login ->
+            Auth.fold
+                (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    ( model, Nav.pushUrl k ( Router.toString Router.Dashboard )) 
+                )
+                (\k -> 
+                    PageLogin.init auth
+                        |> updateWith Login GotLoginMsg 
+                )
+                auth
+
+        Router.Dashboard ->
+            Auth.fold
+                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    PageDashboard.init auth
+                        |> updateWith Dashboard GotDashboardMsg 
+                )
+                (\k -> 
+                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                )
+                auth
+            
+        Router.Learning ->
+            Auth.fold
+                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    PageLearning.init auth
+                        |> updateWith Learning GotLearningMsg 
+                )
+                (\k -> 
+                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                )
+                auth
+            
+        Router.Training ->
+            Auth.fold
+                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    PageTraining.init auth
+                        |> updateWith Training GotTrainingMsg 
+                )
+                (\k -> 
+                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                )
+                auth
+            
+        Router.Settings ->
+            Auth.fold
+                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    PageSettings.init auth
+                        |> updateWith Settings GotSettingsMsg 
+                )
+                (\k -> 
+                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                )
+                auth
+            
+        Router.NotFound ->
+            PageNotFound.init auth
+                |> updateWith NotFound GotNotFoundMsg    
 
 init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeedJson of
-    Ok appSeed -> 
-        let seedPage    = pageFromString appSeed.page
-            currentPage = urlToPage currentUrl
-            urlCommand  = if seedPage == currentPage 
-                            then Cmd.none 
-                            else Nav.pushUrl key ( pageToUrl seedPage )
-        in ( { page = seedPage, user = appSeed.user, key = key }, urlCommand )
-    Err _ -> ( { page = Home, user = Nothing, key = key }, Cmd.none )
+    Ok appSeed ->
+        let seedRoute    = Router.fromSeed appSeed
+            currentRoute = Router.fromUrl currentUrl
+            auth         = Auth.fromMaybeUsername appSeed.user key
+        in 
+        if seedRoute == currentRoute
+            then 
+                case currentRoute of
+                    Router.Home ->
+                        changeRouteTo Router.Home (Home { auth = auth })
+                    
+                    Router.Login ->
+                        changeRouteTo Router.Login (Login (PageLogin.emptyModel auth))
+                    
+                    Router.Dashboard ->
+                        changeRouteTo Router.Dashboard (Dashboard { auth = auth })
+                    
+                    Router.Learning ->
+                        changeRouteTo Router.Learning (Learning { auth = auth })
+                    
+                    Router.Training ->
+                        changeRouteTo Router.Training (Training { auth = auth })
+                    
+                    Router.Settings ->
+                        changeRouteTo Router.Settings (Settings { auth = auth })
+                    
+                    Router.NotFound ->
+                        changeRouteTo Router.NotFound (NotFound { auth = auth })
+            
+            else
+                case seedRoute of 
+                    Router.Home ->
+                       (Home { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                    
+                    Router.Login ->
+                        (Login (PageLogin.emptyModel auth), Nav.pushUrl key ( Router.toString seedRoute ))
+                    
+                    Router.Dashboard ->
+                        (Dashboard { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                    
+                    Router.Learning ->
+                        (Learning { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                    
+                    Router.Training ->
+                        (Training { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                    
+                    Router.Settings ->
+                        (Settings { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                   
+                    Router.NotFound ->
+                        (NotFound { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+            
+    Err _ -> ( Home { auth = Auth.fromKey key }, Cmd.none )
 
 main : Program Decode.Value Model Msg
 main =
