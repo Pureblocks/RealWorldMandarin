@@ -3,10 +3,24 @@
 {-# language OverloadedStrings #-}
 {-# language TypeApplications #-}
 {-# language TypeOperators #-}
+{-# language AllowAmbiguousTypes #-}
+{-# language BangPatterns #-}
+{-# language DataKinds #-}
+{-# language DuplicateRecordFields #-}
+{-# language FlexibleContexts #-}
+{-# language FlexibleInstances #-}
+{-# language GADTs #-}
+{-# language MultiParamTypeClasses #-}
+{-# language OverloadedStrings #-}
+{-# language PolyKinds #-}
+{-# language ScopedTypeVariables #-}
+{-# language TypeApplications #-}
+{-# language TypeOperators #-}
+{-# language UndecidableInstances #-}
 
 module Generator where
 
-import HttpAPI.AuthAPI (AuthAPI, Register, Login)
+import HttpAPI.AuthAPI (AuthAPI, Register, Login, UserJWT)
 import qualified Data.Aeson as Aeson
 import Data.Foldable
 import qualified Data.HashMap.Lazy as HashMap
@@ -14,6 +28,7 @@ import Data.Text (Text, unpack, splitOn, intercalate)
 import qualified Generics.SOP as SOP
 import GHC.Generics
 import Servant.API
+import Servant.Auth.Server
 import qualified Language.Elm.Pretty as Pretty
 import qualified Language.Elm.Simplification as Simplification
 import Language.Haskell.To.Elm
@@ -21,6 +36,8 @@ import Servant.To.Elm
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath.Posix (takeDirectory)
 import HttpAPI.FrontEnd (ElmSeed)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 
 main :: IO ()
 main = do 
@@ -29,6 +46,7 @@ main = do
             <> jsonDefinitions @Register 
             <> jsonDefinitions @Login
             <> jsonDefinitions @ElmSeed
+            <> jsonDefinitions @UserJWT
         modules =
             Pretty.modules $
                 Simplification.simplifyDefinition <$> definitions
@@ -86,4 +104,29 @@ instance HasElmDecoder Aeson.Value ElmSeed where
 instance HasElmEncoder Aeson.Value ElmSeed where
   elmEncoderDefinition =
     Just $ deriveElmJSONEncoder @ElmSeed defaultOptions Aeson.defaultOptions "Models.ElmSeed.elmSeedEncoder"
-    
+
+instance SOP.Generic UserJWT
+instance SOP.HasDatatypeInfo UserJWT
+
+instance HasElmType UserJWT where
+    elmDefinition =
+        Just $ deriveElmTypeDefinition @UserJWT defaultOptions "Clients.Models.AuthAPI.UserJWT"
+
+instance HasElmDecoder Aeson.Value UserJWT where
+  elmDecoderDefinition =
+    Just $ deriveElmJSONDecoder @UserJWT defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.userJwtDecoder"
+
+instance HasElmEncoder Aeson.Value UserJWT where
+  elmEncoderDefinition =
+    Just $ deriveElmJSONEncoder @UserJWT defaultOptions Aeson.defaultOptions "Clients.Models.AuthAPI.userJwtEncoder"
+
+-- | TODO extract this to special generator for API endpoints since this is very dangerous
+-- creates an UserJWT encoder and decoder for each POST call that returns a 201'
+instance HasElmEndpoints (Verb 'POST 201 list a) where
+    elmEndpoints' prefix =
+      [ prefix
+        { _method = "POST"
+        , _returnType =  Just $ Right $ makeDecoder @Aeson.Value @UserJWT
+        , _functionName = Text.toLower (Text.decodeUtf8 "POST") : _functionName prefix
+        }
+      ]

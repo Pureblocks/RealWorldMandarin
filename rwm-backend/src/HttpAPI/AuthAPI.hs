@@ -66,16 +66,16 @@ instance ToJWT UserJWT
 
 type WithCookieNoContent = Headers '[ Header "Set-Cookie" SetCookie
                                     , Header "Set-Cookie" SetCookie
-                                    ] NoContent
+                                    ] UserJWT
 
 type AuthAPI = 
     "api" :> "auth" :> "login"
             :> ReqBody '[JSON] Login
-            :> Verb 'POST 204 '[JSON] WithCookieNoContent
+            :> Verb 'POST 201 '[JSON] WithCookieNoContent
         :<|> 
     "api" :> "auth" :> "register"
             :> ReqBody '[JSON] Register
-            :> Verb 'POST 204 '[JSON] WithCookieNoContent
+            :> Verb 'POST 201 '[JSON] WithCookieNoContent
 
 loginServer :: Connection 
             -> CookieSettings
@@ -111,7 +111,7 @@ setCookies cs jwtCfg user = do
     mApplyCookies <- liftIO $ acceptLogin cs jwtCfg userJWT
     case mApplyCookies of
         Nothing -> throwError err401
-        Just applyCookies -> return $ applyCookies NoContent
+        Just applyCookies -> return $ applyCookies userJWT
 
 registerPasswordError :: Handler WithCookieNoContent
 registerPasswordError = throwError err400
