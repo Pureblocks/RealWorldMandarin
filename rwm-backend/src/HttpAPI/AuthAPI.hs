@@ -54,10 +54,9 @@ instance FromJSON LoginRegistrationError
 
 data UserJWT = 
     UserJWT
-        { exp      :: !UTCTime -- Experation date
-        , sub      :: !Int     -- Subject (user id)
+        { sub      :: !Int     -- Subject (user id)
         , un       :: !Text    -- User name
-        } deriving (Generic)
+        } deriving (Generic, Show)
 
 instance FromJSON UserJWT
 instance ToJSON UserJWT
@@ -107,9 +106,8 @@ setCookies :: CookieSettings
            -> User
            -> Handler WithCookieNoContent
 setCookies cs jwtCfg user = do
-    exp           <- liftIO getCurrentTime
     let (sub, un) = jwtFromUser user
-        userJWT   = UserJWT (addUTCTime 1.21e+6 exp) sub un
+        userJWT   = UserJWT sub un
     mApplyCookies <- liftIO $ acceptLogin cs jwtCfg userJWT
     case mApplyCookies of
         Nothing -> throwError err401

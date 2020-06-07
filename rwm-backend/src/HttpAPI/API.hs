@@ -14,7 +14,7 @@ import HttpAPI.FrontEnd
 
 type API auths = WordADayAPI
       :<|> AuthAPI
-      :<|> Auth auths UserJWT :> FrontEndAPI
+      :<|> (Auth auths UserJWT :> FrontEndAPI)
       :<|> Raw
 
 server :: Connection 
@@ -26,11 +26,15 @@ server conn cs jwtCfg = wordADayServer conn
                    :<|> frontEndAPIServer
                    :<|> serveDirectoryFileServer "resources/web/"
 
-api :: Proxy (API '[JWT])
+api :: Proxy (API '[Cookie])
 api = Proxy
 
 app :: Connection -> Config -> Application
 app conn conf = 
     let jwtCfg = defaultJWTSettings (jwtKey conf)
-        cfg    = defaultCookieSettings :. jwtCfg :. EmptyContext
-    in serveWithContext api cfg (server conn defaultCookieSettings jwtCfg)
+        cookieSettings = defaultCookieSettings 
+            { cookieIsSecure = NotSecure
+            , cookieXsrfSetting = Nothing 
+            }
+        cfg    = cookieSettings :. jwtCfg :. EmptyContext
+    in serveWithContext api cfg (server conn cookieSettings jwtCfg)
