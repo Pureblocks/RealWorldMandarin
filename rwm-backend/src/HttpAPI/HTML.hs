@@ -32,8 +32,14 @@ renderElmApp elmSeed = html_ $ do
     body_ $ script_  ("var app = Elm.Main.init({ flags: " `T.append` decodeUtf8 
                         (toStrict $ encode elmSeed)  `T.append` " })")
     where
-        bootstrapCss = "/css/bootstrap.min.css"
-        jQuery = "/js/jquery-3.5.1.slim.min.js"
-        popper = "/js/popper.min.js"
-        bootstrapJs = "/js/bootstrap.min.js"
+        bootstrapCss = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        jQuery = "https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        popper = "https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        bootstrapJs = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
         elmJs = "/js/main.js"
+
+
+
+
+
+
