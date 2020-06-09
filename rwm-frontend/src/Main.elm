@@ -159,7 +159,7 @@ changeRouteTo route model =
         Router.Login ->
             Auth.fold
                 (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    ( model, Nav.pushUrl k ( Router.toString Router.Dashboard )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Dashboard )) 
                 )
                 (\k -> 
                     PageLogin.init auth
@@ -174,7 +174,7 @@ changeRouteTo route model =
                         |> updateWith Dashboard GotDashboardMsg 
                 )
                 (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
                 )
                 auth
             
@@ -185,7 +185,7 @@ changeRouteTo route model =
                         |> updateWith Learning GotLearningMsg 
                 )
                 (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
                 )
                 auth
             
@@ -196,7 +196,7 @@ changeRouteTo route model =
                         |> updateWith Training GotTrainingMsg 
                 )
                 (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
                 )
                 auth
             
@@ -207,7 +207,7 @@ changeRouteTo route model =
                         |> updateWith Settings GotSettingsMsg 
                 )
                 (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toString Router.Login )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
                 )
                 auth
             
@@ -249,25 +249,25 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
             else
                 case seedRoute of 
                     Router.Home ->
-                       (Home { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                       (Home { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.Login ->
-                        (Login (PageLogin.emptyModel auth), Nav.pushUrl key ( Router.toString seedRoute ))
+                        (Login (PageLogin.emptyModel auth), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.Dashboard ->
-                        (Dashboard { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                        (Dashboard { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.Learning ->
-                        (Learning { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                        (Learning { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.Training ->
-                        (Training { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                        (Training { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.Settings ->
-                        (Settings { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                        (Settings { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
                    
                     Router.NotFound ->
-                        (NotFound { auth = auth }, Nav.pushUrl key ( Router.toString seedRoute ))
+                        (NotFound { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
             
     Err _ -> ( Home { auth = Auth.fromKey key }, Cmd.none )
 

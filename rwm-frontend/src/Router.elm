@@ -1,8 +1,11 @@
-module Router exposing (Route(..), parser, fromSeed, fromUrl, toString)
-import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
+module Router exposing (Route(..), parser, fromSeed, fromUrl, toUrlString, toString, getIcon)
+
+import Url.Parser as Parser exposing ((</>), Parser, oneOf, s)
 import Html exposing (a)
 import Url exposing (Url)
 import Models.ElmSeed exposing (ElmSeed)
+import FontAwesome.Icon as Icon
+import FontAwesome.Solid as FA
 
 type Route
     = Home
@@ -53,8 +56,8 @@ fromUrl url =
     Parser.parse parser url
         |> Maybe.withDefault NotFound
 
-toString : Route -> String
-toString route =
+toUrlString : Route -> String
+toUrlString route =
     case route of
         Home ->
             ""
@@ -76,3 +79,51 @@ toString route =
 
         NotFound ->
             ""
+
+toString : Route -> String
+toString route =
+    case route of
+        Home ->
+            "Home"
+
+        Login ->
+            "Login"
+
+        Dashboard ->
+            "Dashboard"
+
+        Learning ->
+            "Learning"
+
+        Training ->
+            "Training"
+
+        Settings ->
+            "Settings"
+
+        NotFound ->
+            "NotFound"
+
+getIcon : Route -> Icon.Icon
+getIcon route =
+    case route of
+        Home ->
+            FA.home
+
+        Login ->
+            FA.signInAlt
+
+        Dashboard ->
+            FA.chartLine
+
+        Learning ->
+            FA.graduationCap
+
+        Training ->
+            FA.gamepad
+
+        Settings ->
+            FA.wrench
+
+        NotFound ->
+            FA.questionCircle
