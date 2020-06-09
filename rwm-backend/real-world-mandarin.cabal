@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4cd441cc690d29b1c4e432ad7047889b289326c270f2521b061d3d8ad7041c6c
+-- hash: 7269a7224291b64b611f6a9f3a0243a1e10c09743e5508b451430644f1b40d48
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -77,6 +77,7 @@ library
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-multipart
     , servant-server
     , servant-to-elm
     , split
@@ -127,6 +128,7 @@ executable real-world-mandarin-exe
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-multipart
     , servant-server
     , servant-to-elm
     , split
@@ -177,6 +179,7 @@ test-suite real-world-mandarin-test
     , servant
     , servant-auth >=0.3
     , servant-auth-server >=0.4.5
+    , servant-multipart
     , servant-server
     , servant-to-elm
     , split

@@ -25,6 +25,8 @@ renderElmApp elmSeed = html_ $ do
         meta_ [charset_ "utf-8"]
         meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1, shrink-to-fit=no"]
         link_ [rel_ "stylesheet", type_ "text/css", href_ bootstrapCss]
+        link_ [rel_ "stylesheet", type_ "text/css", href_ karla]
+        termWith "style" [type_ "text/css"] "body { font-family: Karla !important; }"
         termWith "script" [type_ "application/javascript", src_ jQuery] ""
         termWith "script" [type_ "application/javascript", src_ popper] ""
         termWith "script" [type_ "application/javascript", src_ bootstrapJs] ""
@@ -33,6 +35,7 @@ renderElmApp elmSeed = html_ $ do
                         (toStrict $ encode elmSeed)  `T.append` " })")
     where
         bootstrapCss = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        karla = "https://fonts.googleapis.com/css?family=Karla"
         jQuery = "https://code.jquery.com/jquery-3.5.1.slim.min.js"
         popper = "https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         bootstrapJs = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
