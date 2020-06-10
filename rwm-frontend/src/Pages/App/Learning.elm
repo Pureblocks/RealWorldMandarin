@@ -2,7 +2,6 @@ module Pages.App.Learning exposing (Model, Msg, init, update, view)
 
 import Browser exposing (Document)
 import Auth exposing (Auth)
-import Pages.App.Menu exposing (menu)
 import Router exposing (Route(..), AppRoute(..))
 import Html as Html
 import Html.Attributes as Attr

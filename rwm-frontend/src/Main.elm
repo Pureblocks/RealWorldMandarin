@@ -63,17 +63,19 @@ fromAuth f model =
         Login m ->
             f m.auth
 
-        App (PageApp.Dashboard m) ->
-            f m.auth
+        App appModel ->
+            case appModel.subModel of
+                PageApp.Dashboard m ->
+                    f m.auth
 
-        App (PageApp.Learning m) ->
-            f m.auth
+                PageApp.Learning m ->
+                    f m.auth
 
-        App (PageApp.Training m) ->
-            f m.auth
+                PageApp.Training m ->
+                    f m.auth
 
-        App (PageApp.Settings m) ->
-            f m.auth
+                PageApp.Settings m ->
+                    f m.auth
 
         NotFound m ->
             f m.auth
@@ -166,16 +168,24 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                         changeRouteTo Router.Login (Login (PageLogin.emptyModel auth))
                     
                     Router.App Router.Dashboard ->
-                        changeRouteTo (Router.App Router.Dashboard) (App (PageApp.Dashboard { auth = auth }))
+                        changeRouteTo 
+                            (Router.App Router.Dashboard) 
+                            (App { currentHoover = Nothing, subModel = PageApp.Dashboard { auth = auth } })
                     
                     Router.App Router.Learning ->
-                        changeRouteTo (Router.App Router.Learning) (App (PageApp.Learning { auth = auth }))
+                        changeRouteTo 
+                            (Router.App Router.Learning) 
+                            (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth } })
                     
                     Router.App Router.Training ->
-                        changeRouteTo (Router.App Router.Training) (App (PageApp.Training { auth = auth }))
+                        changeRouteTo
+                            (Router.App Router.Training)
+                            (App { currentHoover = Nothing, subModel = PageApp.Training { auth = auth } })
                     
                     Router.App Router.Settings ->
-                        changeRouteTo (Router.App Router.Settings) (App (PageApp.Settings { auth = auth }))
+                        changeRouteTo 
+                            (Router.App Router.Settings)
+                            (App { currentHoover = Nothing, subModel = PageApp.Settings { auth = auth } })
                     
                     Router.NotFound ->
                         changeRouteTo Router.NotFound (NotFound { auth = auth })
@@ -189,16 +199,20 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                         (Login (PageLogin.emptyModel auth), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Dashboard ->
-                        (App (PageApp.Dashboard { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                        ( App { currentHoover = Nothing, subModel = PageApp.Dashboard { auth = auth } }
+                        , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Learning ->
-                        (App (PageApp.Learning { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                        (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth } }
+                        , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Training ->
-                        (App (PageApp.Training { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                        (App { currentHoover = Nothing, subModel = PageApp.Training { auth = auth } }
+                        , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Settings ->
-                        (App (PageApp.Settings { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                        (App { currentHoover = Nothing, subModel = PageApp.Settings { auth = auth } }
+                        , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                    
                     Router.NotFound ->
                         (NotFound { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
