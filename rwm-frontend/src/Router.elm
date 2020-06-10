@@ -1,4 +1,4 @@
-module Router exposing (Route(..), parser, fromSeed, fromUrl, toUrlString, toString, getIcon)
+module Router exposing (Route(..), AppRoute(..), parser, fromSeed, fromUrl, toUrlString, toString, getIcon)
 
 import Url.Parser as Parser exposing ((</>), Parser, oneOf, s)
 import Html exposing (a)
@@ -10,21 +10,24 @@ import FontAwesome.Solid as FA
 type Route
     = Home
     | Login
-    | Dashboard
+    | App AppRoute
+    | NotFound
+
+type AppRoute
+    = Dashboard
     | Learning
     | Training
     | Settings
-    | NotFound
 
 parser : Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Home Parser.top
         , Parser.map Login (s "app" </> s "login")
-        , Parser.map Dashboard (s "app" </> s "dashboard")
-        , Parser.map Learning (s "app" </> s "learning")
-        , Parser.map Training (s "app" </> s "training")
-        , Parser.map Settings (s "app" </> s "settings")
+        , Parser.map (App Dashboard) (s "app" </> s "dashboard")
+        , Parser.map (App Learning) (s "app" </> s "learning")
+        , Parser.map (App Training) (s "app" </> s "training")
+        , Parser.map (App Settings) (s "app" </> s "settings")
         ]
 
 fromSeed : ElmSeed -> Route
@@ -37,16 +40,16 @@ fromSeed seed =
             Login
 
         "Dashboard" ->
-            Dashboard
+            (App Dashboard)
 
         "Learning" ->
-            Learning
+            (App Learning)
 
         "Training" ->
-            Training
+            (App Training)
 
         "Settings" ->
-            Settings
+            (App Settings)
 
         _ ->
             NotFound
@@ -65,16 +68,16 @@ toUrlString route =
         Login ->
             "/app/login"
 
-        Dashboard ->
+        (App Dashboard) ->
             "/app/dashboard"
 
-        Learning ->
+        (App Learning) ->
             "/app/learning"
 
-        Training ->
+        (App Training) ->
             "/app/training"
 
-        Settings ->
+        (App Settings) ->
             "/app/settings"
 
         NotFound ->
@@ -89,16 +92,16 @@ toString route =
         Login ->
             "Login"
 
-        Dashboard ->
+        (App Dashboard) ->
             "Dashboard"
 
-        Learning ->
+        (App Learning) ->
             "Learning"
 
-        Training ->
+        (App Training) ->
             "Training"
 
-        Settings ->
+        (App Settings) ->
             "Settings"
 
         NotFound ->
@@ -113,16 +116,16 @@ getIcon route =
         Login ->
             FA.signInAlt
 
-        Dashboard ->
+        (App Dashboard) ->
             FA.chartLine
 
-        Learning ->
+        (App Learning) ->
             FA.graduationCap
 
-        Training ->
+        (App Training) ->
             FA.gamepad
 
-        Settings ->
+        (App Settings) ->
             FA.wrench
 
         NotFound ->

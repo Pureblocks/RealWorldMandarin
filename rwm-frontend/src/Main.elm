@@ -9,21 +9,16 @@ import Url exposing (Url)
 import Browser as Browser
 import Pages.Home as PageHome
 import Pages.Login as PageLogin
-import Pages.Dashboard as PageDashboard
-import Pages.Learning as PageLearning
-import Pages.Training as PageTraining
-import Pages.Settings as PageSettings
+import Pages.App as PageApp
 import Pages.NotFound as PageNotFound
 import Auth as Auth
-import Router exposing (Route)
+import Router as Router
+import Util exposing (updateWith)
 
 type Model
     = Home PageHome.Model
     | Login PageLogin.Model
-    | Dashboard PageDashboard.Model
-    | Learning PageLearning.Model
-    | Training PageTraining.Model
-    | Settings PageSettings.Model
+    | App PageApp.Model
     | NotFound PageNotFound.Model
 
 type Msg
@@ -31,10 +26,7 @@ type Msg
     | ChangedUrl Url
     | GotHomeMsg PageHome.Msg
     | GotLoginMsg PageLogin.Msg
-    | GotDashboardMsg PageDashboard.Msg
-    | GotLearningMsg PageLearning.Msg
-    | GotTrainingMsg PageTraining.Msg
-    | GotSettingsMsg PageSettings.Msg
+    | GotAppMsg PageApp.Msg
     | GotNotFoundMsg PageNotFound.Msg
 
 view : Model -> Document Msg
@@ -56,17 +48,8 @@ view model =
         Login m ->
             viewPage PageLogin.view GotLoginMsg m
 
-        Dashboard m ->
-            viewPage PageDashboard.view GotDashboardMsg m
-
-        Learning m ->
-            viewPage PageLearning.view GotLearningMsg m
-
-        Training m ->
-            viewPage PageTraining.view GotTrainingMsg m
-
-        Settings m ->
-            viewPage PageSettings.view GotSettingsMsg m
+        App m ->
+            viewPage PageApp.view GotAppMsg m
 
         NotFound m ->
             viewPage PageNotFound.view GotNotFoundMsg m
@@ -80,16 +63,16 @@ fromAuth f model =
         Login m ->
             f m.auth
 
-        Dashboard m ->
+        App (PageApp.Dashboard m) ->
             f m.auth
 
-        Learning m ->
+        App (PageApp.Learning m) ->
             f m.auth
 
-        Training m ->
+        App (PageApp.Training m) ->
             f m.auth
 
-        Settings m ->
+        App (PageApp.Settings m) ->
             f m.auth
 
         NotFound m ->
@@ -106,6 +89,10 @@ update msg model =
                     ( model, Nav.pushUrl (fromAuth Auth.getNavKey model) (Url.toString url))
         (ChangedUrl url, _) ->
             changeRouteTo (Router.fromUrl url) model
+
+        (GotAppMsg subMsg, App app) ->
+            PageApp.update subMsg app
+                |> updateWith App GotAppMsg
             
         (GotHomeMsg subMsg, Home home) ->
             PageHome.update subMsg home
@@ -115,51 +102,30 @@ update msg model =
             PageLogin.update subMsg login
                 |> updateWith Login GotLoginMsg
 
-        (GotDashboardMsg subMsg, Dashboard dashboard) ->
-            PageDashboard.update subMsg dashboard
-                |> updateWith Dashboard GotDashboardMsg
-
-        (GotLearningMsg subMsg, Learning learning) ->
-            PageLearning.update subMsg learning
-                |> updateWith Learning GotLearningMsg
-
-        (GotTrainingMsg subMsg, Training training) ->
-            PageTraining.update subMsg training
-                |> updateWith Training GotTrainingMsg
-
-        (GotSettingsMsg subMsg, Settings settings) ->
-            PageSettings.update subMsg settings
-                |> updateWith Settings GotSettingsMsg
-
         (GotNotFoundMsg subMsg, NotFound notFound) ->
             PageNotFound.update subMsg notFound
                 |> updateWith NotFound GotNotFoundMsg
 
         (_, _) ->
-            Debug.log "Received message for the wrong page" ( model, Cmd.none )
-
-updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWith toModel toMsg ( subModel, subCmd ) =
-    ( toModel subModel
-    , Cmd.map toMsg subCmd
-    )
+            Debug.log "Received message for the wrong page in Main" ( model, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
-changeRouteTo : Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo : Router.Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo route model =
     let auth = fromAuth identity model
     in
     case route of
         Router.Home -> 
             PageHome.init auth
-                |> updateWith Home GotHomeMsg 
+                |> updateWith Home GotHomeMsg
+
         Router.Login ->
             Auth.fold
                 (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Dashboard )) 
+                    ( model, Nav.pushUrl k ( Router.toUrlString (Router.App Router.Dashboard) )) 
                 )
                 (\k -> 
                     PageLogin.init auth
@@ -167,50 +133,18 @@ changeRouteTo route model =
                 )
                 auth
 
-        Router.Dashboard ->
+        Router.App subRoute ->
             Auth.fold
-                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    PageDashboard.init auth
-                        |> updateWith Dashboard GotDashboardMsg 
+                (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                    PageApp.init auth subRoute
+                        |> updateWith App GotAppMsg 
                 )
                 (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
+                    PageLogin.init auth
+                        |> updateWith Login GotLoginMsg 
                 )
                 auth
-            
-        Router.Learning ->
-            Auth.fold
-                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    PageLearning.init auth
-                        |> updateWith Learning GotLearningMsg 
-                )
-                (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
-                )
-                auth
-            
-        Router.Training ->
-            Auth.fold
-                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    PageTraining.init auth
-                        |> updateWith Training GotTrainingMsg 
-                )
-                (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
-                )
-                auth
-            
-        Router.Settings ->
-            Auth.fold
-                (\ _ _ -> -- todo push a auth model downstream to init where you always know the user is authenticated
-                    PageSettings.init auth
-                        |> updateWith Settings GotSettingsMsg 
-                )
-                (\k -> 
-                    ( model, Nav.pushUrl k ( Router.toUrlString Router.Login )) 
-                )
-                auth
-            
+                
         Router.NotFound ->
             PageNotFound.init auth
                 |> updateWith NotFound GotNotFoundMsg    
@@ -231,17 +165,17 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                     Router.Login ->
                         changeRouteTo Router.Login (Login (PageLogin.emptyModel auth))
                     
-                    Router.Dashboard ->
-                        changeRouteTo Router.Dashboard (Dashboard { auth = auth })
+                    Router.App Router.Dashboard ->
+                        changeRouteTo (Router.App Router.Dashboard) (App (PageApp.Dashboard { auth = auth }))
                     
-                    Router.Learning ->
-                        changeRouteTo Router.Learning (Learning { auth = auth })
+                    Router.App Router.Learning ->
+                        changeRouteTo (Router.App Router.Learning) (App (PageApp.Learning { auth = auth }))
                     
-                    Router.Training ->
-                        changeRouteTo Router.Training (Training { auth = auth })
+                    Router.App Router.Training ->
+                        changeRouteTo (Router.App Router.Training) (App (PageApp.Training { auth = auth }))
                     
-                    Router.Settings ->
-                        changeRouteTo Router.Settings (Settings { auth = auth })
+                    Router.App Router.Settings ->
+                        changeRouteTo (Router.App Router.Settings) (App (PageApp.Settings { auth = auth }))
                     
                     Router.NotFound ->
                         changeRouteTo Router.NotFound (NotFound { auth = auth })
@@ -254,17 +188,17 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                     Router.Login ->
                         (Login (PageLogin.emptyModel auth), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
-                    Router.Dashboard ->
-                        (Dashboard { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                    Router.App Router.Dashboard ->
+                        (App (PageApp.Dashboard { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
-                    Router.Learning ->
-                        (Learning { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                    Router.App Router.Learning ->
+                        (App (PageApp.Learning { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
-                    Router.Training ->
-                        (Training { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                    Router.App Router.Training ->
+                        (App (PageApp.Training { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
-                    Router.Settings ->
-                        (Settings { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))
+                    Router.App Router.Settings ->
+                        (App (PageApp.Settings { auth = auth }), Nav.pushUrl key ( Router.toUrlString seedRoute ))
                    
                     Router.NotFound ->
                         (NotFound { auth = auth }, Nav.pushUrl key ( Router.toUrlString seedRoute ))

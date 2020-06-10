@@ -1,18 +1,17 @@
-module Pages.Elements.Menu exposing (menu)
+module Pages.App.Menu exposing (menu)
 
-import Router exposing (Route(..))
+import Router exposing (Route(..), AppRoute(..))
 import Html as Html
 import Html.Attributes as Attr
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Html exposing (Html)
 import FontAwesome.Icon as Icon
 import FontAwesome.Attributes as FAAttr
 import FontAwesome.Styles as FAS
 import Html.Events exposing (onClick, onMouseOver)
 
-menu : Route -> Grid.Column msg
+menu : AppRoute -> Grid.Column msg
 menu route =
     Grid.col
         [ Col.attrs 
@@ -43,7 +42,7 @@ menu route =
         , menuItems route
         ]
 
-menuItems : Route -> Html msg
+menuItems : AppRoute -> Html.Html msg
 menuItems currentRoute =
     Html.div
         [ Attr.style "margin-top" "100px"
@@ -58,7 +57,7 @@ menuItems currentRoute =
             ]
         )
 
-menuItem : Route -> Route -> Html msg
+menuItem : AppRoute -> AppRoute -> Html.Html msg
 menuItem currentRoute menuRoute =
     let active = currentRoute == menuRoute
         colorStyle =
@@ -67,7 +66,7 @@ menuItem currentRoute menuRoute =
                 else Attr.style "color" "#bbb"
     in
     Html.a
-        [ Attr.href (Router.toUrlString menuRoute)
+        [ Attr.href (Router.toUrlString (App menuRoute))
         , Attr.style "hover" "" 
         ]
         [ Grid.row
@@ -87,8 +86,8 @@ menuItem currentRoute menuRoute =
                     [ FAAttr.lg
                     , Attr.style "margin" "0px 50px"
                     ] 
-                    (Router.getIcon menuRoute)
-                , Html.text (Router.toString menuRoute)
+                    (Router.getIcon (App menuRoute))
+                , Html.text (Router.toString (App menuRoute))
                 ]
             ]
         ]
