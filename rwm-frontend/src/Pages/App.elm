@@ -111,8 +111,7 @@ view model =
                         [ menu subRoute model.currentHoover
                         , Grid.col
                             [ Col.attrs
-                                [ Attr.class "text-center"
-                                ]
+                                []
                             ]
                             (List.map (Html.map toMsg) body)
                         ]
