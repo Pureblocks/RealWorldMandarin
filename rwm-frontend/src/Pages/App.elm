@@ -67,10 +67,10 @@ update : Msg -> Model -> ( Model, Cmd Msg)
 update msg model =
     case msg of
         Hoover appRoute ->
-            Debug.log "Got hoover message" ({ model | currentHoover = Just appRoute }, Cmd.none)
+            ({ model | currentHoover = Just appRoute }, Cmd.none)
         
         UnHoover ->
-            Debug.log "Hoover gone" ({ model | currentHoover = Nothing }, Cmd.none)
+            ({ model | currentHoover = Nothing }, Cmd.none)
 
         _ ->
             case (msg, model.subModel) of 
