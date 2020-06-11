@@ -8,20 +8,30 @@ import Html.Attributes as Attr
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid as Grid
+import Bootstrap.Button as Button
 import Bootstrap.Form.Textarea as Textarea
 import Html.Lazy exposing (lazy)
+import Html.Events exposing (onMouseOver, onMouseOut, onClick)
 
 type alias Model =
-    { auth: Auth }
+    { auth: Auth
+    , story: String
+    }
 
-type Msg = LearningSampleMessage
+type Msg = StoryAreaInput String
+         | SubmitStory
 
 init : Auth -> ( Model, Cmd Msg)
-init auth = ( { auth = auth }, Cmd.none )
+init auth = ( { auth = auth, story = "" }, Cmd.none )
 
 update : Msg -> Model -> ( Model, Cmd Msg)
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        StoryAreaInput story ->
+            ( { model | story = story }, Cmd.none )
+        
+        SubmitStory ->
+            Debug.log model.story ( model, Cmd.none )
 
 
 view : Model -> Document Msg
@@ -31,116 +41,112 @@ view model =
         [ Grid.row
             []
             [ Grid.col
-                [ Col.md12
-                , Col.lg2
+                [ Col.attrs
+                    [ Attr.class "d-none d-sm-block"
+                    , Attr.style "margin-top" "50px"
+                    ]
                 ]
                 []
+            ]
+        , Grid.row
+            []
+            [ Grid.col
+                [ Col.xs12
+                , Col.lg6
+                , Col.attrs
+                    [ Attr.style "margin-bottom" "10px"
+                    , Attr.style "color" "#1E1E24"
+                    , Attr.class "text-center"
+                    ] 
+                ]
+                [ Html.div
+                    [ Attr.style "font-size" "42px"
+                    ]
+                    [ Html.span [ Attr.style "color" "1E1E24"] [ Html.text "Friend" ]
+                    ]
+                ]
             , Grid.col
-                [ Col.sm12
-                , Col.lg8
+                [ Col.xs12
+                , Col.lg6
+                ]
+                []
+            ]
+        , Grid.row
+            [ Row.attrs [ Attr.style "padding" "25px" ]]
+            [ Grid.col
+                [ Col.xs12
+                , Col.lg6
+                , Col.attrs
+                    [ Attr.style "margin" "0px 0px 0px 0px"
+                    , Attr.style "color" "#1E1E24"
+                    , Attr.class "text-center"
+                    , Attr.style "border-top" "1px solid #1E1E24"
+                    , Attr.style "border-bottom" "1px solid #1E1E24"
+                    ] 
+                ]
+                [ Html.div
+                    [ Attr.style "font-size" "247px" ]
+                    [ Html.text "朋"]
+                ]
+            , Grid.col
+                [ Col.xs12
+                , Col.lg6
+                ]
+                [ Textarea.textarea
+                    [ Textarea.id "storyArea"
+                    , Textarea.onInput StoryAreaInput
+                    , Textarea.attrs
+                        [ Attr.placeholder "Enter your story here..."
+                        , Attr.style "background-color" "#F6F4FC"
+                        , Attr.style "color" "#1E1E24"
+                        , Attr.style "font-size" "18px"
+                        , Attr.style "border" "none"
+                        , Attr.style "height" "100%"
+                        ]
+                    ]
+                ]
+            ]
+        , Grid.row
+            [ Row.attrs
+                [ Attr.style "margin-top" "20px" ]
+            ]
+            [ Grid.col
+                [ Col.xs12
+                , Col.lg6
+                , Col.attrs
+                    [ Attr.style "margin" "0px 0px 0px 0px"
+                    , Attr.style "color" "#444140"
+                    , Attr.class "text-center"
+                    ] 
+                ]
+                [ Html.div
+                    [ Attr.style "font-size" "32px" ]
+                    [ Html.text "Moon (月) + Moon (月)"]
+                ]
+            , Grid.col
+                [ Col.xs12
+                , Col.lg6
                 ]
                 [ Grid.row
                     []
                     [ Grid.col
-                        [ Col.md12
-                        , Col.lg5
-                        ]
-                        [ Grid.row
-                            []
-                            [ Grid.col
-                                [ Col.xs12
-                                , Col.attrs
-                                    [ Attr.style "background-color" "#FFA987"
-                                    , Attr.style "margin" "60px 30px 15px 30px"
-                                    , Attr.style "color" "#1E1E24"
-                                    , Attr.class "text-center"
-                                    , Attr.style "border" "1px solid #1E1E24"
-                                    ] 
-                                ]
-                                [ Html.div
-                                    [ Attr.style "font-size" "36px"
-                                    ]
-                                    [ Html.span [ Attr.style "color" "1E1E24"] [ Html.text "Friend" ]
-                                    ]
-                                ]
-                            , Grid.col
-                                [ Col.xs12
-                                , Col.attrs
-                                    [ Attr.style "background-color" "#E54B4B"
-                                    , Attr.style "margin" "15px 30px 15px 30px"
-                                    , Attr.style "color" "#1E1E24"
-                                    , Attr.class "text-center"
-                                    , Attr.style "border" "1px solid #1E1E24"
-                                    ] 
-                                ]
-                                [ Html.div
-                                    [ Attr.style "font-size" "247px" ]
-                                    [ Html.text "朋"]
-                                ]
-                            , Grid.col
-                                [ Col.xs12
-                                , Col.attrs
-                                    [ Attr.style "background-color" "#F7EBE8"
-                                    , Attr.style "margin" "15px 30px 15px 30px"
-                                    , Attr.style "color" "#444140"
-                                    , Attr.class "text-center"
-                                    , Attr.style "border" "1px solid #1E1E24"
-                                    ] 
-                                ]
-                                [ Html.div
-                                    [ Attr.style "font-size" "36px" ]
-                                    [ Html.text "moon (月) + moon (月)"]
-                                ]
+                        [ Col.xs12 ]
+                        [ Html.div
+                            [ Attr.class "float-right"
+                            , Attr.style "background-color" "#E54B4B"
+                            , Attr.style "font-size" "24px"
+                            , Attr.style "padding" "10px"
+                            , Attr.style "margin" "0px 0px 0px 0px"
+                            , Attr.style "color" "#EAE9EE"
+                            , Attr.style "border-radius" "5px"
+                            , Attr.style "border" "1px solid #131021"
+                            , Attr.style "cursor" "pointer"
+                            , onClick SubmitStory
                             ]
-
-                        ]
-                    , Grid.col
-                        [ Col.md12
-                        , Col.lg7
-                        ]
-                        [ Grid.row
-                            []
-                            [ Grid.col
-                                [ Col.xs12
-                                , Col.attrs
-                                    [ Attr.style "margin" "60px 30px 15px 30px"
-                                    ] 
-                                ]
-                                [ Textarea.textarea
-                                    [ Textarea.id "storyArea"
-                                    , Textarea.rows 16
-                                    , Textarea.attrs 
-                                        [ Attr.placeholder "Enter your story here..."
-                                        , Attr.style "background-color" "#F7EBE8"
-                                        , Attr.style "color" "#1E1E24"
-                                        , Attr.style "font-size" "18px"
-                                        , Attr.style "border" "1px solid #1E1E24"
-                                        ]
-                                    ]
-                                ]
-                            , Grid.col
-                                [ Col.xs12
-                                , Col.attrs
-                                    [ Attr.style "background-color" "#E54B4B"
-                                    , Attr.style "margin" "15px 30px 15px 30px"
-                                    , Attr.style "color" "#F7EBE8"
-                                    , Attr.class "text-center"
-                                    , Attr.style "border" "1px solid #1E1E24"
-                                    ] 
-                                ]
-                                [ Html.div
-                                    [ Attr.style "font-size" "36px" ]
-                                    [ Html.text "Learned!" ]
-                                ]
-                            ]
+                            [ Html.text "Learned" ]
                         ]
                     ]
                 ]
-            , Grid.col
-                [ Col.md12
-                , Col.lg2
-                ]
-                []
             ]
         ] 
     }

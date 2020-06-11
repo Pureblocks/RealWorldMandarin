@@ -175,7 +175,7 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                     Router.App Router.Learning ->
                         changeRouteTo 
                             (Router.App Router.Learning) 
-                            (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth } })
+                            (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth, story = "" } })
                     
                     Router.App Router.Training ->
                         changeRouteTo
@@ -203,7 +203,7 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                         , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Learning ->
-                        (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth } }
+                        (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth, story = "" } }
                         , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Training ->
