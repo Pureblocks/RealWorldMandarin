@@ -1,40 +1,41 @@
-module Auth exposing (Auth(..), isAuthenticated, getNavKey, getUserName, fromKey, fromMaybeUsername, fold)
+module Auth exposing (Auth(..), isAuthenticated, getNavKey, getUserName, fromKey, fromMaybeUserJWT, fold)
 
 import Browser.Navigation as Nav
+import Clients.Models.AuthAPI exposing (UserJWT)
 
 type Auth
-    = Authenticated String Nav.Key
+    = Authenticated String Int Nav.Key
     | Guest Nav.Key
 
 isAuthenticated : Auth -> Bool
 isAuthenticated a =
     case a of
-        Authenticated _ _ -> True
+        Authenticated _ _ _ -> True
         Guest _ -> False
 
 getNavKey : Auth -> Nav.Key
 getNavKey a =
     case a of
-        Authenticated _ k -> k
+        Authenticated _ _ k -> k
         Guest k           -> k
 
 getUserName : Auth -> Maybe String
 getUserName a =
     case a of
-        Authenticated u _ -> Just u
+        Authenticated u _ _ -> Just u
         Guest _           -> Nothing
 
 fromKey : Nav.Key -> Auth
 fromKey = Guest
 
-fromMaybeUsername : Maybe String -> Nav.Key -> Auth
-fromMaybeUsername username key =
-    case username of
-        Just u -> Authenticated u key
+fromMaybeUserJWT : Maybe UserJWT -> Nav.Key -> Auth
+fromMaybeUserJWT userJWT key =
+    case userJWT of
+        Just u -> Authenticated u.un u.sub key
         Nothing -> Guest key
 
-fold : (String -> Nav.Key -> a) -> (Nav.Key -> a) -> Auth -> a
+fold : (String -> Int -> Nav.Key -> a) -> (Nav.Key -> a) -> Auth -> a
 fold onAuthenticated onGuest auth =
     case auth of
-        Authenticated un k -> onAuthenticated un k
+        Authenticated un uid k -> onAuthenticated un uid k
         Guest k -> onGuest k

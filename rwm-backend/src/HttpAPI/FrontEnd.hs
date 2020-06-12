@@ -32,8 +32,8 @@ frontEndAPIServer auth = renderPage "Home" "Home" auth
                     :<|> renderPage "Settings" "Login" auth
 
 data ElmSeed = ElmSeed 
-    { page :: !Text
-    , user :: !(Maybe Text)
+    { page    :: !Text
+    , userJWT :: !(Maybe UserJWT)
     } deriving (Generic)
 
 instance ToJSON ElmSeed
@@ -45,7 +45,7 @@ renderPage :: Text
            -> Handler RawHtml
 renderPage firstPage _ (Authenticated userJWT) = do
     liftIO $ putStrLn "Logged in!"
-    pure $ RawHtml $ renderBS (renderElmApp (ElmSeed firstPage (Just (un userJWT))))
+    pure $ RawHtml $ renderBS (renderElmApp (ElmSeed firstPage (Just userJWT)))
 renderPage _ secondPage ar = do
     liftIO $ putStrLn ("NOT logged in " ++ show ar)
     pure $ RawHtml $ renderBS (renderElmApp (ElmSeed secondPage Nothing))

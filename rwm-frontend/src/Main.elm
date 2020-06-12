@@ -14,6 +14,7 @@ import Pages.NotFound as PageNotFound
 import Auth as Auth
 import Router as Router
 import Util exposing (updateWith)
+import Pages.App.Learning as Learning
 
 type Model
     = Home PageHome.Model
@@ -126,7 +127,7 @@ changeRouteTo route model =
 
         Router.Login ->
             Auth.fold
-                (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                (\ _ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
                     ( model, Nav.pushUrl k ( Router.toUrlString (Router.App Router.Dashboard) )) 
                 )
                 (\k -> 
@@ -137,7 +138,7 @@ changeRouteTo route model =
 
         Router.App subRoute ->
             Auth.fold
-                (\ _ k -> -- todo push a auth model downstream to init where you always know the user is authenticated
+                (\ _  _ k -> -- todo push a auth model (type alias AppAuth { username, userid }) downstream to init where you always know the user is authenticated
                     PageApp.init auth subRoute
                         |> updateWith App GotAppMsg 
                 )
@@ -156,7 +157,7 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
     Ok appSeed ->
         let seedRoute    = Router.fromSeed appSeed
             currentRoute = Router.fromUrl currentUrl
-            auth         = Auth.fromMaybeUsername appSeed.user key
+            auth         = Auth.fromMaybeUserJWT appSeed.userJWT key
         in 
         if seedRoute == currentRoute
             then 
@@ -175,7 +176,7 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                     Router.App Router.Learning ->
                         changeRouteTo 
                             (Router.App Router.Learning) 
-                            (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth, story = "" } })
+                            (App { currentHoover = Nothing, subModel = PageApp.Learning (Learning.emptyModel auth) })
                     
                     Router.App Router.Training ->
                         changeRouteTo
@@ -203,7 +204,7 @@ init appSeedJson currentUrl key = case Decode.decodeValue elmSeedDecoder appSeed
                         , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Learning ->
-                        (App { currentHoover = Nothing, subModel = PageApp.Learning { auth = auth, story = "" } }
+                        (App { currentHoover = Nothing, subModel = PageApp.Learning (Learning.emptyModel auth) }
                         , Nav.pushUrl key ( Router.toUrlString seedRoute ))
                     
                     Router.App Router.Training ->

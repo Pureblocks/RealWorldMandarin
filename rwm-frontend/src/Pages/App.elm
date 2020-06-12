@@ -31,9 +31,6 @@ type SubModel
     | Training PageTraining.Model
     | Settings PageSettings.Model
 
-type alias MenuModel =
-    { currentHoover : Maybe Router.AppRoute }
-
 type Msg
     = GotDashboardMsg PageDashboard.Msg
     | GotLearningMsg PageLearning.Msg

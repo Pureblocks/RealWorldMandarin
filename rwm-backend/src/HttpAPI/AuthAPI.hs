@@ -71,11 +71,11 @@ type WithCookieNoContent = Headers '[ Header "Set-Cookie" SetCookie
 type AuthAPI = 
     "api" :> "auth" :> "login"
             :> ReqBody '[JSON] Login
-            :> Verb 'POST 201 '[JSON] WithCookieNoContent
+            :> PostCreated '[JSON] WithCookieNoContent
         :<|> 
     "api" :> "auth" :> "register"
             :> ReqBody '[JSON] Register
-            :> Verb 'POST 201 '[JSON] WithCookieNoContent
+            :> PostCreated '[JSON] WithCookieNoContent
 
 loginServer :: Connection 
             -> CookieSettings

@@ -11,6 +11,12 @@ module Database.CharacterDB
     , userNameFromUser
     , registerNewUser
     , ViolationError(..)
+    , insertLearnedCharacter
+    , selectElementsFor
+    , Character(..)
+    , CharacterT(..)
+    , Element(..)
+    , ElementT(..)
     ) where
 
 import Database.Beam
@@ -196,10 +202,21 @@ selectLatestCharacter :: Connection -> Int -> IO Int
 selectLatestCharacter conn userId =
     let getCharacterId (CharacterId id) = id
         maxCharacterUserQ =
-            aggregate_ (\uc -> fromMaybe_ 1 (max_ (getCharacterId $ _ucCharacter uc))) $
+            aggregate_ (\uc -> fromMaybe_ 0 (max_ (getCharacterId $ _ucCharacter uc))) $
                 filter_ (\uc -> _ucUser uc ==. val_ (UserId userId)) $
                 all_ (_tableUserCharacters characterDB)
     in runSelectOne conn (select maxCharacterUserQ)
+
+selectElementsFor :: Connection -> Character -> IO [(Element, Character)]
+selectElementsFor conn character =
+    runBeamPostgres conn $
+        runSelectReturningList $ select $
+        do elements <- 
+                filter_ (\e -> _elementCharacter e ==. val_ (CharacterId (_charId character))) $
+                all_ (_tableElements characterDB)
+           characters <- all_ (_tableCharacters characterDB)
+           guard_ (_elementElement elements `references_` characters)
+           return (elements, characters)
 
 -- | Selects all the characters that a user has learned (created a story for)
 selectLearnedCharacters :: Connection -> Int -> IO [(Character, UserCharacter)]
@@ -211,7 +228,18 @@ selectNotlearnedCharacters conn userId = undefined
 
 -- | Marks a character learned with a story
 insertLearnedCharacter :: Connection -> Int -> Int -> Text -> IO ()
-insertLearnedCharacter conn userId characterId story = undefined
+insertLearnedCharacter conn userId characterId story =
+    runBeamPostgres conn $ runInsert $
+        insert 
+            (_tableUserCharacters characterDB)
+            ( insertExpressions
+                [ UserCharacter
+                    default_
+                    (UserId (val_ userId))
+                    (CharacterId (val_ characterId))
+                    (val_ story)
+                ]
+            )
 
 -- | Selects the user for logging in (apply encryption etc with salt)
 selectUserForLogin :: Connection -> Text -> Text -> IO (Maybe User)

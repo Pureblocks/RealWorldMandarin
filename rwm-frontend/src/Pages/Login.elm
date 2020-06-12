@@ -116,7 +116,7 @@ update msg model =
         LoginResponse result ->
             case result of
                 Ok userJWT ->
-                    ( { model | auth = Auth.Authenticated userJWT.un (Auth.getNavKey model.auth) }
+                    ( { model | auth = Auth.Authenticated userJWT.un userJWT.sub (Auth.getNavKey model.auth) }
                     , Nav.pushUrl (Auth.getNavKey model.auth) "/app/dashboard"
                     )
 
@@ -164,7 +164,7 @@ update msg model =
         RegisterResponse result ->
             case result of
                 Ok userJWT -> 
-                    ( { model | auth = Auth.Authenticated userJWT.un (Auth.getNavKey model.auth) }
+                    ( { model | auth = Auth.Authenticated userJWT.un userJWT.sub (Auth.getNavKey model.auth) }
                     , Nav.pushUrl (Auth.getNavKey model.auth) "/app/dashboard"
                     )
 

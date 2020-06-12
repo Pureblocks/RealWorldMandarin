@@ -11,9 +11,11 @@ import HttpAPI.WordADayAPI
 import HttpAPI.AuthAPI
 import Configuration.Config
 import HttpAPI.FrontEnd
+import HttpAPI.CharacterAPI
 
 type API auths = WordADayAPI
       :<|> AuthAPI
+      :<|> (Auth auths UserJWT :> CharacterAPI)
       :<|> (Auth auths UserJWT :> FrontEndAPI)
       :<|> Raw
 
@@ -23,6 +25,7 @@ server :: Connection
        -> Server (API auths)
 server conn cs jwtCfg = wordADayServer conn 
                    :<|> loginServer conn cs jwtCfg 
+                   :<|> characterServer conn
                    :<|> frontEndAPIServer
                    :<|> serveDirectoryFileServer "resources/web/"
 

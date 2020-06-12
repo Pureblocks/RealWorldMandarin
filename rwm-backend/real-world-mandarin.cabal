@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7269a7224291b64b611f6a9f3a0243a1e10c09743e5508b451430644f1b40d48
+-- hash: 091b0a462f024aa09eea110411deaecfac386bf360b2b75ddddc566da3ff9eaa
 
 name:           real-world-mandarin
 version:        0.1.0.0
@@ -31,6 +31,8 @@ library
       Database.Beam.Extended
       Database.CharacterDB
       Database.WordADayDB
+      Generators.AuthGenerators
+      Generators.CharacterGenerators
       HttpAPI.API
       HttpAPI.AuthAPI
       HttpAPI.CharacterAPI

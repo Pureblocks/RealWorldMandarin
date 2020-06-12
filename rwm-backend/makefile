@@ -8,3 +8,6 @@ build:
 
 run: getWebResources build
 	stack run
+
+generate: build
+	stack exec -- runhaskell -iserver/src app/Generator.hs
