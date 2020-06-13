@@ -190,9 +190,10 @@ view model =
                         ]
                         [ Html.div
                             [ Attr.style "font-size" "32px" ]
-                            ( List.map
-                                (\e -> Html.text (" " ++ e.elementKeyword ++ " " ++ e.elemHanzi ++ " "))
-                                character.elements
+                            ( List.intersperse (Html.text " + ")
+                                (List.map
+                                    (\e -> Html.text (e.elementKeyword ++ " (" ++ e.elemHanzi ++ ")"))
+                                    character.elements)
                             )
                         ]
                     , Grid.col
