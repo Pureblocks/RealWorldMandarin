@@ -1,28 +1,28 @@
-id,hanzi_character,keyword,primitive,elements
-1,一,one,True,NULL
-2,‎二,two,False,1;1
-3,三,three,False,1;1;1
-4,七,seven,True,NULL
-5,八,eight,False,NULL
-6,九,nine,True,NULL
-7,十,ten,True,NULL
-8,口,mouth,True,NULL
-9,日,day,True,NULL
-10,月,moon,True,NULL
-11,田,field,True,NULL
-12,目,eye,True,NULL
-13,古,ancient,True,7;8
-14,胡,recklessly,False,13;10
-15,朋,friend,False,10;10
-16,明,sight,False,9;10
-17,品,product,False,8;8;8
-18,晶,crystal,False,9;9;9
-19,昌,prosperous,False,9;9
-20,唱,sing,False,8;19
-21,早,early,False,9;10
-22,旭,rising,False,6;9
-23,世,generation,False,7;7;7;1;1
-24,胃,stomach,False,11;10
-25,旦,daybreak,False,9;1
-26,凹,concave,False,NULL
-27,凸,convex,False,NULL
+id,hanzi_character,keyword,tip,elements
+1,一,one,A horizontal roman one.,NULL
+2,‎二,two,,1;1
+3,三,three,,1;1;1
+4,七,seven,It is a seven! Just upside down and mirrored!,NULL
+5,八,eight,The character looks like two legs. Create a story that includes two legs but indecates 8!,NULL
+6,九,nine,,NULL
+7,十,ten,A roman ten but 45 degrees turned around.,NULL
+8,口,mouth,It looks like a mouth!,NULL
+9,叭,trumpet,,8;5
+10,日,sun,Pictograph of the sun. You can think of the single line as the horizon.,NULL
+11,月,moon,If you look hard enough it resembles a moon. One of these moons you can lie on.,NULL
+12,田,field,Create a story that includes a Chinese rice field.,NULL
+13,目,eye,If you look hard enough it resembles an eye.,NULL
+14,古,ancient,,7;8
+15,咕,mumble,,8;14
+16,胡,recklessly,,14;11
+17,朋,friend,,11;11
+18,明,sight,,10;11
+19,品,product,,8;8;8
+20,晶,crystal,,10;10;10
+21,昌,prosperous,,10;10
+22,唱,sing,,8;21
+23,早,early,,10;7
+24,旭,rising,,6;10
+25,世,generation,,7;7;7;1;1
+26,胃,stomach,,11;10
+27,旦,daybreak,,9;1
